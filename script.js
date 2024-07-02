@@ -37,10 +37,44 @@ function init() {
 
 }
 
-// function for rendering background elements
-function renderBackground() {
-
-}
+function Pot(x, y) {
+    // stem
+    ctx.rect(x + 14, y + 20, 4, 60);
+    ctx.stroke();
+    ctx.fill();
+    // flower head
+    ctx.fillStyle = "white";
+    ctx.lineWidth = 2;
+    ctx.rect(x, y, 10, 10);
+    ctx.rect(x + 22, y + 22, 10, 10);
+    ctx.rect(x + 22, y, 10, 10);
+    ctx.rect(x, y + 22, 10, 10);
+    ctx.stroke();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.rect(x + 11, y - 4, 10, 10);
+    ctx.rect(x - 4, y + 11, 10, 10);
+    ctx.rect(x + 26, y + 11, 10, 10);
+    ctx.rect(x + 11, y + 25, 10, 10);
+    ctx.stroke();
+    ctx.fill();
+    ctx.beginPath();
+    ctx.rect(x + 6, y + 6, 20, 20);
+    ctx.stroke();
+  
+    // pot
+    ctx.beginPath();
+    ctx.rect(x - 4, y + 90, 39, 22);
+    ctx.stroke();
+    ctx.strokeRect(x - 7, y + 80, 45, 9);
+    ctx.rect(x - 7, y + 80, 45, 9);
+  }
+  
+  // function for rendering background elements
+  function renderBackground() {
+    // place sprite onto background wherever you please..
+    Pot(50, 10);
+  }
 
 // function for rendering prop objects in PROPS
 function renderProps() {
