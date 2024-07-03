@@ -37,43 +37,54 @@ function init() {
 
 }
 
-function Pot(x, y) {
-    // stem
-    ctx.rect(x + 14, y + 20, 4, 60);
-    ctx.stroke();
-    ctx.fill();
-    // flower head
-    ctx.fillStyle = "white";
+const Dir = Object.freeze({
+    Up: 0x1,
+    Down: 0x2,
+    Left: 0x4,
+    Right: 0x8
+});
+
+const wallWidth = 6;
+const mmSize = 30;
+const spotSize = wallWidth+mmSize;
+
+const Board = [
+ [ Dir.Down|Dir.Right, Dir.Left|Dir.Down|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Down|Dir.Right, Dir.Left|Dir.Down|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Down|Dir.Right, Dir.Left|Dir.Down],
+ [ Dir.Down|Dir.Up, Dir.Up|Dir.Down, Dir.Down|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Down, Dir.Up|Dir.Down, Dir.Up|Dir.Down],
+ [ Dir.Down|Dir.Up, Dir.Up|Dir.Down, Dir.Up|Dir.Down, Dir.Right, Dir.Left, Dir.Up|Dir.Down, Dir.Up|Dir.Down, Dir.Up|Dir.Down],
+ [ Dir.Down|Dir.Up, Dir.Up|Dir.Right, Dir.Left|Dir.Up|Dir.Right, Dir.Left|Dir.Down|Dir.Right,Dir.Left|Dir.Down|Dir.Right, Dir.Left|Dir.Up|Dir.Right, Dir.Left|Dir.Up, Dir.Up|Dir.Down, Dir.Up|Dir.Down],
+ [ Dir.Down|Dir.Up|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Up, Dir.Up|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Down|Dir.Up],
+ [ Dir.Up|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Up],
+];
+
+function drawBoard() {
+    ctx.fillStyle = "green";
     ctx.lineWidth = 2;
-    ctx.rect(x, y, 10, 10);
-    ctx.rect(x + 22, y + 22, 10, 10);
-    ctx.rect(x + 22, y, 10, 10);
-    ctx.rect(x, y + 22, 10, 10);
-    ctx.stroke();
-    ctx.fill();
-    ctx.beginPath();
-    ctx.rect(x + 11, y - 4, 10, 10);
-    ctx.rect(x - 4, y + 11, 10, 10);
-    ctx.rect(x + 26, y + 11, 10, 10);
-    ctx.rect(x + 11, y + 25, 10, 10);
-    ctx.stroke();
-    ctx.fill();
-    ctx.beginPath();
-    ctx.rect(x + 6, y + 6, 20, 20);
-    ctx.stroke();
+    for(let i = 0; i < Board.length; i++) {
+        for (let j = 0; j < Board[0].length; j++) {
+            let spot = Board[i][j];
+            let positionL = j*spotSize + 12;
+            let positionU = i*spotSize + 12; 
+            if ((spot & Dir.Left) === 0) {
+                ctx.fillRect(positionL, positionU, wallWidth, spotSize);
+            }
+            if ((spot & Dir.Right) === 0) {
+                ctx.fillRect(positionL+spotSize, positionU, wallWidth, spotSize);
+            }
+            if ((spot & Dir.Up) === 0) {
+                ctx.fillRect(positionL, positionU, spotSize+wallWidth, wallWidth);
+            }
+            if ((spot & Dir.Down) === 0) {
+                ctx.fillRect(positionL, positionU+spotSize, spotSize+wallWidth, wallWidth);
+            }
+        }
+    }
+}
   
-    // pot
-    ctx.beginPath();
-    ctx.rect(x - 4, y + 90, 39, 22);
-    ctx.stroke();
-    ctx.strokeRect(x - 7, y + 80, 45, 9);
-    ctx.rect(x - 7, y + 80, 45, 9);
-  }
-  
-  // function for rendering background elements
-  function renderBackground() {
+// function for rendering background elements
+function renderBackground() {
     // place sprite onto background wherever you please..
-    Pot(50, 10);
+    drawBoard();
   }
 
 // function for rendering prop objects in PROPS
