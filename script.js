@@ -25,12 +25,15 @@ const ctx = canvas.getContext("2d");
 // object for storing globally accessable states
 const GLOBALS = {}
 
-
 // Array where all props will be stored
 const PROPS = [];
 
 // Array where all characters will be stored
 const CHARS = [];
+
+let mathmanImage = new Image(30, 30);
+mathmanImage.src = "MathmanGlitchAvatar.png";
+let MATHMAN_POS = {x: 0, y: 0};
 
 // function for applying any initial settings
 function init() {
@@ -57,14 +60,17 @@ const Board = [
  [ Dir.Up|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Up],
 ];
 
+function getCoordinatesFromPosition(x, y, skipWall) {
+    return [x*spotSize + 12 + (skipWall ? wallWidth : 0), y*spotSize + 12 + (skipWall ? wallWidth : 0)];
+}
+
 function drawBoard() {
     ctx.fillStyle = "green";
     ctx.lineWidth = 2;
     for(let i = 0; i < Board.length; i++) {
         for (let j = 0; j < Board[0].length; j++) {
             let spot = Board[i][j];
-            let positionL = j*spotSize + 12;
-            let positionU = i*spotSize + 12; 
+            let [positionL, positionU] = getCoordinatesFromPosition(j, i, false);
             if ((spot & Dir.Left) === 0) {
                 ctx.fillRect(positionL, positionU, wallWidth, spotSize);
             }
@@ -94,7 +100,8 @@ function renderProps() {
 
 // function for rendering character objects in CHARS
 function renderCharacters() {
-
+    let [x, y] = getCoordinatesFromPosition(MATHMAN_POS.x, MATHMAN_POS.y, true);
+    ctx.drawImage(mathmanImage, x, y, mathmanImage.width, mathmanImage.height);
 }
 
 // function for rendering onscreen controls 
