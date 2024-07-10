@@ -55,7 +55,42 @@ const Board = [
  [ Dir.Up|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Up],
 ];
 
+function isValidPosition(pos) {
+    return pos.x >= 0 && pos.x < Board[0].length && pos.y >= 0 && pos.y < Board.length;
+}
+
 function tryMove(newPosFn) {
+    let oldPos = {x: MATHMAN_POS.x, y: MATHMAN_POS.y};
+    let newPos = {x: MATHMAN_POS.x, y: MATHMAN_POS.y};
+    newPosFn(newPos);
+    if (!isValidPosition(newPos)) { return; }
+    // This assumes only one coordinate moves
+    if (oldPos.x != newPos.x) {
+        const minX = Math.min(oldPos.x, newPos.x);
+        const maxX = Math.max(oldPos.x, newPos.x);
+        let x = minX;
+        while (x < maxX) {
+            if ((Board[oldPos.y][x] & Dir.Right) === 0) {
+                // can't move
+                return;
+            }
+            x++;
+        }
+    }
+    if (oldPos.y != newPos.y) {
+        const minY = Math.min(oldPos.y, newPos.y);
+        const maxY = Math.max(oldPos.y, newPos.y);
+        let y = minY;
+        while (y < maxY) {
+            if ((Board[y][oldPos.x] & Dir.Down) === 0) {
+                // can't move
+                return;
+            }
+            y++;
+        }
+    }
+    // move allowed!
+    Object.assign(MATHMAN_POS, newPos);
 }
 
 // function for applying any initial settings
@@ -64,28 +99,19 @@ function init() {
         // TODO - don't allow movement if going through a wall
         switch (ev.key) {
             case "ArrowLeft": {
-                //tryMove(p => p.x--);
-                if (MATHMAN_POS.x > 0) {
-                    MATHMAN_POS.x--;
-                }
+                tryMove(p => p.x--);
                 break;
             }
             case "ArrowRight": {
-                if (MATHMAN_POS.x < Board[0].length - 1) {
-                    MATHMAN_POS.x++;
-                }
+                tryMove(p => p.x++);
                 break;
             }
             case "ArrowUp": {
-                if (MATHMAN_POS.y > 0) {
-                    MATHMAN_POS.y--;
-                }
+                tryMove(p => p.y--);
                 break;
             }
             case "ArrowDown": {
-                if (MATHMAN_POS.y < Board.length - 1) {
-                    MATHMAN_POS.y++;
-                }
+                tryMove(p => p.y++);
                 break;
             }
         }
