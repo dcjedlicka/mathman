@@ -35,11 +35,6 @@ let mathmanImage = new Image(30, 30);
 mathmanImage.src = "MathmanGlitchAvatar.png";
 let MATHMAN_POS = {x: 0, y: 0};
 
-// function for applying any initial settings
-function init() {
-
-}
-
 const Dir = Object.freeze({
     Up: 0x1,
     Down: 0x2,
@@ -59,6 +54,43 @@ const Board = [
  [ Dir.Down|Dir.Up|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Up, Dir.Up|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Down|Dir.Up],
  [ Dir.Up|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Up],
 ];
+
+function tryMove(newPosFn) {
+}
+
+// function for applying any initial settings
+function init() {
+    document.addEventListener("keydown", ev => {
+        // TODO - don't allow movement if going through a wall
+        switch (ev.key) {
+            case "ArrowLeft": {
+                //tryMove(p => p.x--);
+                if (MATHMAN_POS.x > 0) {
+                    MATHMAN_POS.x--;
+                }
+                break;
+            }
+            case "ArrowRight": {
+                if (MATHMAN_POS.x < Board[0].length - 1) {
+                    MATHMAN_POS.x++;
+                }
+                break;
+            }
+            case "ArrowUp": {
+                if (MATHMAN_POS.y > 0) {
+                    MATHMAN_POS.y--;
+                }
+                break;
+            }
+            case "ArrowDown": {
+                if (MATHMAN_POS.y < Board.length - 1) {
+                    MATHMAN_POS.y++;
+                }
+                break;
+            }
+        }
+    })
+}
 
 function getCoordinatesFromPosition(x, y, skipWall) {
     return [x*spotSize + 12 + (skipWall ? wallWidth : 0), y*spotSize + 12 + (skipWall ? wallWidth : 0)];
@@ -111,17 +143,17 @@ function renderControls() {
 
 // main function to be run for rendering frames
 function startFrames() {
-// erase entire canvas
-ctx.clearRect(0,0,canvas.width,canvas.height);
+    // erase entire canvas
+    ctx.clearRect(0,0,canvas.width,canvas.height);
 
-// render each type of entity in order, relative to layers
-renderBackground();
-renderProps();
-renderCharacters();
-renderControls();
+    // render each type of entity in order, relative to layers
+    renderBackground();
+    renderProps();
+    renderCharacters();
+    renderControls();
 
-// rerun function (call next frame)
-window.requestAnimationFrame(startFrames);
+    // rerun function (call next frame)
+    window.requestAnimationFrame(startFrames);
 }
 
 init(); // initialize game settings
