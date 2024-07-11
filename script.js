@@ -144,17 +144,43 @@ function drawBoard() {
 // function for rendering background elements
 function renderBackground() {
     // place sprite onto background wherever you please..
-    drawBoard();
+     drawBoard();
+    let aQuestion = new question();
+    ctx.font = "30px sans serif";
+    ctx.fillText(aQuestion.text, 30, 30);
+    for(let x of aQuestion.answers) {
+        let spot = getCoordinatesFromPosition(x.xpos, x.ypos, false);
+        ctx.fillText(x.answer.text, spot[0], spot[1]);
+    }
   }
 
-class foo {
+class question {
+    constructor() {
+        this.text = "All numbers greater than 6";
+        this.answers = [];
+        this.answers.push(new answerPosition(new answer("3", false), 2, 0));
+        this.answers.push(new answerPosition(new answer("12", true), 4, 2));
+        this.answers.push(new answerPosition(new answer("14", true), 1, 3));
+    }
+}
 
+class answerPosition {
+    constructor(answer, xpos, ypos) {
+        this.answer = answer;
+        this.xpos = xpos;
+        this.ypos = ypos;
+    }
+}
+
+class answer {
+    constructor(text, correct) {
+        this.text = text;
+        this.correct = correct;
+    }
 }
 
 // function for rendering elements
 function renderElements() {
-    ctx.font = "30px sans serif";
-    ctx.fillText("All numbers greater than 6", 30, 30);
 }
 
 // function for rendering character objects in CHARS
