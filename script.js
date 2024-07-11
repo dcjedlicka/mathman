@@ -25,9 +25,6 @@ const ctx = canvas.getContext("2d");
 // object for storing globally accessable states
 const GLOBALS = {}
 
-// Array where all props will be stored
-const PROPS = [];
-
 // Array where all characters will be stored
 const CHARS = [];
 
@@ -150,20 +147,20 @@ function renderBackground() {
     drawBoard();
   }
 
-// function for rendering prop objects in PROPS
-function renderProps() {
+class foo {
 
+}
+
+// function for rendering elements
+function renderElements() {
+    ctx.font = "30px sans serif";
+    ctx.fillText("All numbers greater than 6", 30, 30);
 }
 
 // function for rendering character objects in CHARS
 function renderCharacters() {
     let [x, y] = getCoordinatesFromPosition(MATHMAN_POS.x, MATHMAN_POS.y, true);
     ctx.drawImage(mathmanImage, x, y, mathmanImage.width, mathmanImage.height);
-}
-
-// function for rendering onscreen controls 
-function renderControls() {
-
 }
 
 // main function to be run for rendering frames
@@ -173,9 +170,8 @@ function startFrames() {
 
     // render each type of entity in order, relative to layers
     renderBackground();
-    renderProps();
+    renderElements();
     renderCharacters();
-    renderControls();
 
     // rerun function (call next frame)
     window.requestAnimationFrame(startFrames);
