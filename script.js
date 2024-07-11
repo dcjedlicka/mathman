@@ -43,11 +43,11 @@ const Dir = Object.freeze({
 });
 
 const wallWidth = 6;
-const mmSize = 30;
+const mmSize = 40;
 const spotSize = wallWidth+mmSize;
 
 const Board = [
- [ Dir.Down|Dir.Right, Dir.Left|Dir.Down|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Down|Dir.Right, Dir.Left|Dir.Down|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Down|Dir.Right, Dir.Left|Dir.Down],
+ [ Dir.Down|Dir.Right, Dir.Left|Dir.Down|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Down|Dir.Right, Dir.Left|Dir.Down],
  [ Dir.Down|Dir.Up, Dir.Up|Dir.Down, Dir.Down|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Down, Dir.Up|Dir.Down, Dir.Up|Dir.Down],
  [ Dir.Down|Dir.Up, Dir.Up|Dir.Down, Dir.Up|Dir.Down, Dir.Right, Dir.Left, Dir.Up|Dir.Down, Dir.Up|Dir.Down, Dir.Up|Dir.Down],
  [ Dir.Down|Dir.Up, Dir.Up|Dir.Right, Dir.Left|Dir.Up|Dir.Right, Dir.Left|Dir.Down|Dir.Right,Dir.Left|Dir.Down|Dir.Right, Dir.Left|Dir.Up|Dir.Right, Dir.Left|Dir.Up, Dir.Up|Dir.Down, Dir.Up|Dir.Down],
@@ -96,7 +96,6 @@ function tryMove(newPosFn) {
 // function for applying any initial settings
 function init() {
     document.addEventListener("keydown", ev => {
-        // TODO - don't allow movement if going through a wall
         switch (ev.key) {
             case "ArrowLeft": {
                 tryMove(p => p.x--);
@@ -119,7 +118,7 @@ function init() {
 }
 
 function getCoordinatesFromPosition(x, y, skipWall) {
-    return [x*spotSize + 12 + (skipWall ? wallWidth : 0), y*spotSize + 12 + (skipWall ? wallWidth : 0)];
+    return [x*spotSize + 12 + (skipWall ? wallWidth : 0), y*spotSize + 50 + (skipWall ? wallWidth : 0)];
 }
 
 function drawBoard() {

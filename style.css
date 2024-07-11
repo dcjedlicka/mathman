@@ -3,8 +3,8 @@ canvas {
     display: block;
     margin: auto;
     width: 800px;
-    height: 500px;
-    top: 20px;
+    height: 600px;
+    top: 10px;
     position: relative;
   }
 #character{
