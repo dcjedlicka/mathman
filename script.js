@@ -43,11 +43,13 @@ const wallWidth = 6;
 const mmSize = 40;
 const spotSize = wallWidth+mmSize;
 
+let currentQuestion = undefined;
+
 const Board = [
  [ Dir.Down|Dir.Right, Dir.Left|Dir.Down|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Down|Dir.Right, Dir.Left|Dir.Down],
- [ Dir.Down|Dir.Up, Dir.Up|Dir.Down, Dir.Down|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Down, Dir.Up|Dir.Down, Dir.Up|Dir.Down],
- [ Dir.Down|Dir.Up, Dir.Up|Dir.Down, Dir.Up|Dir.Down, Dir.Right, Dir.Left, Dir.Up|Dir.Down, Dir.Up|Dir.Down, Dir.Up|Dir.Down],
- [ Dir.Down|Dir.Up, Dir.Up|Dir.Right, Dir.Left|Dir.Up|Dir.Right, Dir.Left|Dir.Down|Dir.Right,Dir.Left|Dir.Down|Dir.Right, Dir.Left|Dir.Up|Dir.Right, Dir.Left|Dir.Up, Dir.Up|Dir.Down, Dir.Up|Dir.Down],
+ [ Dir.Down|Dir.Up, Dir.Up|Dir.Down, Dir.Down|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right|Dir.Down, Dir.Left|Dir.Down, Dir.Up|Dir.Down, Dir.Up|Dir.Down],
+ [ Dir.Down|Dir.Up, Dir.Up|Dir.Down, Dir.Up|Dir.Down, Dir.Right|Dir.Down, Dir.Left|Dir.Up, Dir.Up|Dir.Down, Dir.Up|Dir.Down, Dir.Up|Dir.Down],
+ [ Dir.Down|Dir.Up, Dir.Up|Dir.Right, Dir.Left|Dir.Up|Dir.Right, Dir.Left|Dir.Down|Dir.Right|Dir.Up,Dir.Left|Dir.Down|Dir.Right, Dir.Left|Dir.Up|Dir.Right, Dir.Left|Dir.Up, Dir.Up|Dir.Down, Dir.Up|Dir.Down],
  [ Dir.Down|Dir.Up|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Up, Dir.Up|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Down|Dir.Up],
  [ Dir.Up|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Up],
 ];
@@ -145,11 +147,12 @@ function drawBoard() {
 function renderBackground() {
     // place sprite onto background wherever you please..
      drawBoard();
-    let aQuestion = new question();
+    currentQuestion = new question();
     ctx.font = "30px sans serif";
-    ctx.fillText(aQuestion.text, 30, 30);
-    for(let x of aQuestion.answers) {
-        let spot = getCoordinatesFromPosition(x.xpos, x.ypos, false);
+    ctx.textBaseline = "top";
+    ctx.fillText(currentQuestion.text, 30, 10);
+    for(let x of currentQuestion.answers) {
+        let spot = getCoordinatesFromPosition(x.xpos, x.ypos, true);
         ctx.fillText(x.answer.text, spot[0], spot[1]);
     }
   }
@@ -159,7 +162,7 @@ class question {
         this.text = "All numbers greater than 6";
         this.answers = [];
         this.answers.push(new answerPosition(new answer("3", false), 2, 0));
-        this.answers.push(new answerPosition(new answer("12", true), 4, 2));
+        this.answers.push(new answerPosition(new answer("12", true), 4, 1));
         this.answers.push(new answerPosition(new answer("14", true), 1, 3));
     }
 }
