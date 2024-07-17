@@ -54,6 +54,8 @@ const Board = [
  [ Dir.Up|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Up],
 ];
 
+boardElements = [];
+
 function isValidPosition(pos) {
     return pos.x >= 0 && pos.x < Board[0].length && pos.y >= 0 && pos.y < Board.length;
 }
@@ -117,7 +119,7 @@ function init() {
 }
 
 function getCoordinatesFromPosition(x, y, skipWall) {
-    return [x*spotSize + 12 + (skipWall ? wallWidth : 0), y*spotSize + 50 + (skipWall ? wallWidth : 0)];
+    return [x*spotSize + 12 + (skipWall ? wallWidth + 4 : 0), y*spotSize + 50 + (skipWall ? wallWidth + 4 : 0)];
 }
 
 function drawBoard() {
@@ -147,6 +149,10 @@ function drawBoard() {
 function renderBackground() {
     // place sprite onto background wherever you please..
      drawBoard();
+     boardElements = new Array(Board.length);
+     for (let i = 0; i < Board.length; i++) {
+        boardElements[i] = new Array(Board[0].length).fill(1);
+     }
     currentQuestion = new question();
     ctx.font = "30px sans serif";
     ctx.textBaseline = "top";
@@ -154,16 +160,22 @@ function renderBackground() {
     for(let x of currentQuestion.answers) {
         let spot = getCoordinatesFromPosition(x.xpos, x.ypos, true);
         ctx.fillText(x.answer.text, spot[0], spot[1]);
+        boardElements[x.ypos][x.xpos] = 9;
     }
-  }
+}
 
 class question {
     constructor() {
-        this.text = "All numbers greater than 6";
+        this.text = "Eat all numbers greater than 6";
         this.answers = [];
         this.answers.push(new answerPosition(new answer("3", false), 2, 0));
+        this.answers.push(new answerPosition(new answer("9", false), 7, 1));
         this.answers.push(new answerPosition(new answer("12", true), 4, 1));
         this.answers.push(new answerPosition(new answer("14", true), 1, 3));
+        this.answers.push(new answerPosition(new answer("1", true), 5, 5));
+        this.answers.push(new answerPosition(new answer("55", true), 3, 2));
+        this.answers.push(new answerPosition(new answer("5", true), 6, 4));
+        this.answers.push(new answerPosition(new answer("7", true), 0, 4));
     }
 }
 
