@@ -28,9 +28,16 @@ const GLOBALS = {}
 // Array where all characters will be stored
 const CHARS = [];
 
+const MathmanMode = Object.freeze({
+    Moving: 1,
+    Question: 2
+});
+
 let mathmanImage = new Image(30, 30);
 mathmanImage.src = "MathmanGlitchAvatar.png";
 let MATHMAN_POS = {x: 0, y: 0};
+let currentQuestion = undefined;
+let currentMathmanMode = MathmanMode.Moving;
 
 const Dir = Object.freeze({
     Up: 0x1,
@@ -42,8 +49,6 @@ const Dir = Object.freeze({
 const wallWidth = 6;
 const mmSize = 40;
 const spotSize = wallWidth+mmSize;
-
-let currentQuestion = undefined;
 
 const Board = [
  [ Dir.Down|Dir.Right, Dir.Left|Dir.Down|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Down|Dir.Right, Dir.Left|Dir.Down],
@@ -64,7 +69,7 @@ function tryMove(newPosFn) {
     let oldPos = {x: MATHMAN_POS.x, y: MATHMAN_POS.y};
     let newPos = {x: MATHMAN_POS.x, y: MATHMAN_POS.y};
     newPosFn(newPos);
-    if (!isValidPosition(newPos)) { return; }
+    if (!isValidPosition(newPos)) { return false; }
     // This assumes only one coordinate moves
     if (oldPos.x != newPos.x) {
         const minX = Math.min(oldPos.x, newPos.x);
@@ -73,7 +78,7 @@ function tryMove(newPosFn) {
         while (x < maxX) {
             if ((Board[oldPos.y][x] & Dir.Right) === 0) {
                 // can't move
-                return;
+                return false;
             }
             x++;
         }
@@ -85,37 +90,68 @@ function tryMove(newPosFn) {
         while (y < maxY) {
             if ((Board[y][oldPos.x] & Dir.Down) === 0) {
                 // can't move
-                return;
+                return false;
             }
             y++;
         }
     }
     // move allowed!
     Object.assign(MATHMAN_POS, newPos);
+    return true;
 }
 
 // function for applying any initial settings
 function init() {
     document.addEventListener("keydown", ev => {
-        switch (ev.key) {
-            case "ArrowLeft": {
-                tryMove(p => p.x--);
-                break;
-            }
-            case "ArrowRight": {
-                tryMove(p => p.x++);
-                break;
-            }
-            case "ArrowUp": {
-                tryMove(p => p.y--);
-                break;
-            }
-            case "ArrowDown": {
-                tryMove(p => p.y++);
-                break;
-            }
+        if (currentMathmanMode == MathmanMode.Moving) {
+            handleMove(ev);
+        }
+        else {
+            handleQuestion(ev);
         }
     })
+}
+
+function handleMove(ev) {
+    let didMove = false;
+    switch (ev.key) {
+        case "ArrowLeft": {
+            didMove = tryMove(p => p.x--);
+            break;
+        }
+        case "ArrowRight": {
+            didMove = tryMove(p => p.x++);
+            break;
+        }
+        case "ArrowUp": {
+            didMove = tryMove(p => p.y--);
+            break;
+        }
+        case "ArrowDown": {
+            didMove = tryMove(p => p.y++);
+            break;
+        }
+    }
+    if (didMove) {
+        let element = boardElements[MATHMAN_POS.x][MATHMAN_POS.y]; 
+        if (element == 1) {
+            boardElements[MATHMAN_POS.x][MATHMAN_POS.y] = 0;
+        }
+        else if (element != 0) {
+            activateQuestionMode();
+        }
+    }
+}
+
+function activateQuestionMode() {
+    // TODO finish
+    // set mode
+    // display questions
+}
+
+function handleQuestion(ev) {
+    // TODO finish
+    // check keydown and handle
 }
 
 function getCoordinatesFromPosition(x, y, skipWall) {
@@ -160,7 +196,7 @@ function renderBackground() {
     for(let x of currentQuestion.answers) {
         let spot = getCoordinatesFromPosition(x.xpos, x.ypos, true);
         ctx.fillText(x.answer.text, spot[0], spot[1]);
-        boardElements[x.ypos][x.xpos] = 9;
+        boardElements[x.ypos][x.xpos] = x;
     }
 }
 
