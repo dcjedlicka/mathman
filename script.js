@@ -1,13 +1,15 @@
-//var character = document.getElementById("character");
-//document.addEventListener("click",jump);
-/*function jump(){
-    if(character.classList == "animate"){return;}
-    character.classList.add("animate");
-    setTimeout(removeJump,300); //300ms = length of animation
-}*/
-/*function removeJump(){
-    character.classList.remove("animate");
-}*/
+/*
+Issues:
+finish checking answer to questions
+remove answer after answering
+Handle losing
+Check for winning
+Handle winning
+clean up
+more questions
+*/
+
+
 /*var block = document.getElementById("block");
 function checkDead(){
     let characterTop = parseInt(window.getComputedStyle(character).getPropertyValue("top"));
@@ -102,6 +104,14 @@ function tryMove(newPosFn) {
 
 // function for applying any initial settings
 function init() {
+    boardElements = new Array(Board.length);
+    for (let i = 0; i < Board.length; i++) {
+       boardElements[i] = new Array(Board[0].length).fill(1);
+    }
+    currentQuestion = new question();
+    for(let x of currentQuestion.answers) {
+        boardElements[x.ypos][x.xpos] = x;
+    }
     document.addEventListener("keydown", ev => {
         if (currentMathmanMode == MathmanMode.Moving) {
             handleMove(ev);
@@ -133,9 +143,9 @@ function handleMove(ev) {
         }
     }
     if (didMove) {
-        let element = boardElements[MATHMAN_POS.x][MATHMAN_POS.y]; 
+        let element = boardElements[MATHMAN_POS.y][MATHMAN_POS.x]; 
         if (element == 1) {
-            boardElements[MATHMAN_POS.x][MATHMAN_POS.y] = 0;
+            boardElements[MATHMAN_POS.y][MATHMAN_POS.x] = 0;
         }
         else if (element != 0) {
             activateQuestionMode();
@@ -144,14 +154,26 @@ function handleMove(ev) {
 }
 
 function activateQuestionMode() {
-    // TODO finish
-    // set mode
-    // display questions
+    currentMathmanMode=MathmanMode.Question;
 }
 
 function handleQuestion(ev) {
     // TODO finish
-    // check keydown and handle
+    let didMove = false;
+    switch (ev.key.toLowerCase()) {
+        case "y": {
+            didMove = false;
+            currentMathmanMode = MathmanMode.Moving;
+            break;
+        }
+        case "n": {
+            didMove = false;
+            currentMathmanMode = MathmanMode.Moving;
+            break;
+        }
+    }
+    if (didMove) {
+    }
 }
 
 function getCoordinatesFromPosition(x, y, skipWall) {
@@ -184,19 +206,19 @@ function drawBoard() {
 // function for rendering background elements
 function renderBackground() {
     // place sprite onto background wherever you please..
-     drawBoard();
-     boardElements = new Array(Board.length);
-     for (let i = 0; i < Board.length; i++) {
-        boardElements[i] = new Array(Board[0].length).fill(1);
-     }
-    currentQuestion = new question();
+    drawBoard();
     ctx.font = "30px sans serif";
     ctx.textBaseline = "top";
     ctx.fillText(currentQuestion.text, 30, 10);
     for(let x of currentQuestion.answers) {
         let spot = getCoordinatesFromPosition(x.xpos, x.ypos, true);
         ctx.fillText(x.answer.text, spot[0], spot[1]);
-        boardElements[x.ypos][x.xpos] = x;
+    }
+
+    if (currentMathmanMode == MathmanMode.Question) {
+        // Draw current question
+        let questionToDisplay = boardElements[MATHMAN_POS.y][MATHMAN_POS.x];
+        ctx.fillText("Eat " + questionToDisplay.answer.text + "?   Y or N ?", 30, 350);
     }
 }
 
