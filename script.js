@@ -32,7 +32,8 @@ const CHARS = [];
 
 const MathmanMode = Object.freeze({
     Moving: 1,
-    Question: 2
+    Question: 2,
+    Dead: 3,
 });
 
 let mathmanImage = new Image(30, 30);
@@ -114,13 +115,17 @@ function init() {
         boardElements[x.ypos][x.xpos] = x;
     }
     document.addEventListener("keydown", ev => {
-        if (currentMathmanMode == MathmanMode.Moving) {
-            handleMove(ev);
+        switch (currentMathmanMode) {
+            case MathmanMode.Moving:
+                handleMove(ev);
+                break;
+            case MathmanMode.Question:
+                handleQuestion(ev);
+                break;
+            case MathmanMode.Dead:
+                break;
         }
-        else {
-            handleQuestion(ev);
-        }
-    })
+    });
 }
 
 function handleMove(ev) {
@@ -160,20 +165,26 @@ function activateQuestionMode() {
 
 function handleQuestion(ev) {
     // TODO finish
-    let didMove = false;
+    let answer = undefined;
     switch (ev.key.toLowerCase()) {
         case "y": {
-            didMove = false;
-            currentMathmanMode = MathmanMode.Moving;
+            answer = true;
             break;
         }
         case "n": {
-            didMove = false;
-            currentMathmanMode = MathmanMode.Moving;
+            answer = false;
             break;
         }
     }
-    if (didMove) {
+    if (answer !== undefined) {
+        const question = boardElements[MATHMAN_POS.y][MATHMAN_POS.x];
+        // TODO - feedback either way
+        if (question.answer.correct === answer) {
+            currentMathmanMode = MathmanMode.Moving;
+            boardElements[MATHMAN_POS.y][MATHMAN_POS.x] = 0;
+        } else {
+            currentMathmanMode = MathmanMode.Dead;
+        }
     }
 }
 
@@ -209,19 +220,19 @@ function renderBackground() {
     // place sprite onto background wherever you please..
     drawBoard();
     ctx.font = "30px sans serif";
-    ctx.fillStyle = "green";
     ctx.textBaseline = "top";
     ctx.fillText(currentQuestion.text, 30, 10);
-    for(let x of currentQuestion.answers) {
-        let spot = getCoordinatesFromPosition(x.xpos, x.ypos, true);
-        ctx.fillText(x.answer.text, spot[0], spot[1]);
-    }
-    ctx.fillStyle = "lightBlue";
     for (let y = 0; y < boardElements.length; y++) {
         for (let x = 0; x < boardElements[0].length; x++) {
             if (boardElements[y][x] === 1) {
                 let spot = getCoordinatesFromPosition(x, y);
+                ctx.fillStyle = "lightBlue";
                 ctx.fillText("+-", spot[0] + 10, spot[1] + 10);
+            }
+            else if (boardElements[y][x].answer !== undefined) {
+                let spot = getCoordinatesFromPosition(x, y, true);
+                ctx.fillStyle = "green";
+                ctx.fillText(boardElements[y][x].answer.text, spot[0], spot[1]);
             }
         }
     }
@@ -239,12 +250,12 @@ class question {
         this.text = "Eat all numbers greater than 6";
         this.answers = [];
         this.answers.push(new answerPosition(new answer("3", false), 2, 0));
-        this.answers.push(new answerPosition(new answer("9", false), 7, 1));
+        this.answers.push(new answerPosition(new answer("9", true), 7, 1));
         this.answers.push(new answerPosition(new answer("12", true), 4, 1));
         this.answers.push(new answerPosition(new answer("14", true), 1, 3));
-        this.answers.push(new answerPosition(new answer("1", true), 5, 5));
+        this.answers.push(new answerPosition(new answer("1", false), 5, 5));
         this.answers.push(new answerPosition(new answer("55", true), 3, 2));
-        this.answers.push(new answerPosition(new answer("5", true), 6, 4));
+        this.answers.push(new answerPosition(new answer("5", false), 6, 4));
         this.answers.push(new answerPosition(new answer("7", true), 0, 4));
     }
 }
