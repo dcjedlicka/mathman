@@ -1,10 +1,5 @@
 /*
 Issues:
-finish checking answer to questions
-remove answer after answering
-Handle losing
-Check for winning
-Handle winning
 clean up
 more questions
 */
@@ -34,6 +29,7 @@ const MathmanMode = Object.freeze({
     Moving: 1,
     Question: 2,
     Dead: 3,
+    Won: 4,
 });
 
 const Dir = Object.freeze({
@@ -132,6 +128,8 @@ function init() {
                 break;
             case MathmanMode.Dead:
                 break;
+            case MathmanMode.Won:
+                break;
         }
     });
 }
@@ -213,7 +211,6 @@ function activateQuestionMode() {
 }
 
 function handleQuestion(ev) {
-    // TODO finish
     let answer = undefined;
     switch (ev.key.toLowerCase()) {
         case "y": {
@@ -227,14 +224,23 @@ function handleQuestion(ev) {
     }
     if (answer !== undefined) {
         const question = boardElements[MATHMAN_POS.y][MATHMAN_POS.x];
-        // TODO - feedback either way
         if (question.answer.correct === answer) {
+            // TODO play a happy sound
             currentMathmanMode = MathmanMode.Moving;
             boardElements[MATHMAN_POS.y][MATHMAN_POS.x] = 0;
+            if (checkIfWon()) {
+                currentMathmanMode = MathmanMode.Won;
+            }
         } else {
             currentMathmanMode = MathmanMode.Dead;
+            // TODO go into glitch mode with chase and music
         }
     }
+}
+
+function checkIfWon() {
+    let won = !(boardElements.some(row => row.some(elem => elem !== 0)));
+    return won;
 }
 
 function getCoordinatesFromPosition(x, y, skipWall) {
@@ -285,12 +291,25 @@ function renderBackground() {
             }
         }
     }
-
     ctx.fillStyle = "green";
-    if (currentMathmanMode === MathmanMode.Question) {
-        // Draw current question
-        let questionToDisplay = boardElements[MATHMAN_POS.y][MATHMAN_POS.x];
-        ctx.fillText("Eat " + questionToDisplay.answer.text + "?   Y or N ?", 30, 350);
+    switch (currentMathmanMode) {
+        case MathmanMode.Moving:
+            break;
+        case MathmanMode.Question:
+            // Draw current question
+            let questionToDisplay = boardElements[MATHMAN_POS.y][MATHMAN_POS.x];
+            ctx.fillText("Eat " + questionToDisplay.answer.text + "?   Y or N ?", 30, 350);
+            break;
+        case MathmanMode.Dead:
+            ctx.fillStyle = "black";
+            ctx.fillText("Sorry, the glitch wins!", 30, 350);
+            ctx.fillStyle = "green";
+            break;
+        case MathmanMode.Won:
+            ctx.fillStyle = "black";
+            ctx.fillText("Mathman wins!", 30, 350);
+            ctx.fillStyle = "green";
+            break;
     }
 }
 
