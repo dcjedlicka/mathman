@@ -203,6 +203,9 @@ function handleMove(ev) {
         else if (element !== 0) {
             activateQuestionMode();
         }
+        if (checkIfWon()) {
+            currentMathmanMode = MathmanMode.Won;
+        }
     }
 }
 
@@ -307,7 +310,7 @@ function renderBackground() {
             break;
         case MathmanMode.Won:
             ctx.fillStyle = "black";
-            ctx.fillText("Mathman wins!", 30, 350);
+            ctx.fillText("Mathman wins! Free game!", 30, 350);
             ctx.fillStyle = "green";
             break;
     }
