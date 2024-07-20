@@ -47,11 +47,14 @@ const Dir = Object.freeze({
 let mathmanImage = new Image(30, 30);
 mathmanImage.src = "MathmanGlitchAvatar.png";
 let MATHMAN_POS = {x: 0, y: 0};
+let MATHMAN_DISPLAY_POS = {x: 0, y: 0};
 let currentQuestion = undefined;
 let currentMathmanMode = MathmanMode.Moving;
 // Set this to 1 to turn off smooth moves
-const MOVE_INCREMENT = 0.05;
+const MOVE_INCREMENT = 1;
 let currentMathmanDir = Dir.Right;
+// Set if mathman is between spaces (with smooth moves)
+let currentMathmanMovingDir = undefined;
 
 
 const wallWidth = 6;
@@ -158,20 +161,40 @@ function handleMove(ev) {
         switch (direction) {
             case Dir.Left: {
                 didMove = tryMove(p => p.x--);
+                if (didMove && MOVE_INCREMENT !== 1) {
+                    MATHMAN_POS.x += 1;
+                    MATHMAN_DISPLAY_POS.x -= MOVE_INCREMENT;
+                }
                 break;
             }
             case Dir.Right: {
                 didMove = tryMove(p => p.x++);
+                if (didMove && MOVE_INCREMENT !== 1) {
+                    MATHMAN_POS.x -= 1;
+                    MATHMAN_DISPLAY_POS.x += MOVE_INCREMENT;
+                }
                 break;
             }
             case Dir.Up: {
                 didMove = tryMove(p => p.y--);
+                if (didMove && MOVE_INCREMENT !== 1) {
+                    MATHMAN_POS.y += 1;
+                    MATHMAN_DISPLAY_POS.y -= MOVE_INCREMENT;
+                }
                 break;
             }
             case Dir.Down: {
                 didMove = tryMove(p => p.y++);
+                if (didMove && MOVE_INCREMENT !== 1) {
+                    MATHMAN_POS.y -= 1;
+                    MATHMAN_DISPLAY_POS.y += MOVE_INCREMENT;
+                }
                 break;
             }
+        }
+        if (didMove) {
+            currentMathmanDir = direction;
+            currentMathmanMovingDir = direction;
         }
     }
     if (didMove) {
