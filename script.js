@@ -108,6 +108,7 @@ function init() {
     for (let i = 0; i < Board.length; i++) {
        boardElements[i] = new Array(Board[0].length).fill(1);
     }
+    boardElements[MATHMAN_POS.y][MATHMAN_POS.x] = 0;
     currentQuestion = new question();
     for(let x of currentQuestion.answers) {
         boardElements[x.ypos][x.xpos] = x;
@@ -144,17 +145,17 @@ function handleMove(ev) {
     }
     if (didMove) {
         let element = boardElements[MATHMAN_POS.y][MATHMAN_POS.x]; 
-        if (element == 1) {
+        if (element === 1) {
             boardElements[MATHMAN_POS.y][MATHMAN_POS.x] = 0;
         }
-        else if (element != 0) {
+        else if (element !== 0) {
             activateQuestionMode();
         }
     }
 }
 
 function activateQuestionMode() {
-    currentMathmanMode=MathmanMode.Question;
+    currentMathmanMode = MathmanMode.Question;
 }
 
 function handleQuestion(ev) {
@@ -208,14 +209,25 @@ function renderBackground() {
     // place sprite onto background wherever you please..
     drawBoard();
     ctx.font = "30px sans serif";
+    ctx.fillStyle = "green";
     ctx.textBaseline = "top";
     ctx.fillText(currentQuestion.text, 30, 10);
     for(let x of currentQuestion.answers) {
         let spot = getCoordinatesFromPosition(x.xpos, x.ypos, true);
         ctx.fillText(x.answer.text, spot[0], spot[1]);
     }
+    ctx.fillStyle = "lightBlue";
+    for (let y = 0; y < boardElements.length; y++) {
+        for (let x = 0; x < boardElements[0].length; x++) {
+            if (boardElements[y][x] === 1) {
+                let spot = getCoordinatesFromPosition(x, y);
+                ctx.fillText("+-", spot[0] + 10, spot[1] + 10);
+            }
+        }
+    }
 
-    if (currentMathmanMode == MathmanMode.Question) {
+    ctx.fillStyle = "green";
+    if (currentMathmanMode === MathmanMode.Question) {
         // Draw current question
         let questionToDisplay = boardElements[MATHMAN_POS.y][MATHMAN_POS.x];
         ctx.fillText("Eat " + questionToDisplay.answer.text + "?   Y or N ?", 30, 350);
