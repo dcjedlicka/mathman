@@ -36,18 +36,23 @@ const MathmanMode = Object.freeze({
     Dead: 3,
 });
 
-let mathmanImage = new Image(30, 30);
-mathmanImage.src = "MathmanGlitchAvatar.png";
-let MATHMAN_POS = {x: 0, y: 0};
-let currentQuestion = undefined;
-let currentMathmanMode = MathmanMode.Moving;
-
 const Dir = Object.freeze({
     Up: 0x1,
     Down: 0x2,
     Left: 0x4,
     Right: 0x8
 });
+
+
+let mathmanImage = new Image(30, 30);
+mathmanImage.src = "MathmanGlitchAvatar.png";
+let MATHMAN_POS = {x: 0, y: 0};
+let currentQuestion = undefined;
+let currentMathmanMode = MathmanMode.Moving;
+// Set this to 1 to turn off smooth moves
+const MOVE_INCREMENT = 0.05;
+let currentMathmanDir = Dir.Right;
+
 
 const wallWidth = 6;
 const mmSize = 40;
@@ -128,24 +133,45 @@ function init() {
     });
 }
 
-function handleMove(ev) {
-    let didMove = false;
-    switch (ev.key) {
+function keyToDirection(key) {
+    switch (key) {
         case "ArrowLeft": {
-            didMove = tryMove(p => p.x--);
-            break;
+            return Dir.Left;
         }
         case "ArrowRight": {
-            didMove = tryMove(p => p.x++);
-            break;
+            return Dir.Right;
         }
         case "ArrowUp": {
-            didMove = tryMove(p => p.y--);
-            break;
+            return Dir.Up;
         }
         case "ArrowDown": {
-            didMove = tryMove(p => p.y++);
-            break;
+            return Dir.Down;
+        }
+    }
+    return undefined;
+}
+
+function handleMove(ev) {
+    let didMove = false;
+    let direction = keyToDirection(ev.key);
+    if (direction) {
+        switch (direction) {
+            case Dir.Left: {
+                didMove = tryMove(p => p.x--);
+                break;
+            }
+            case Dir.Right: {
+                didMove = tryMove(p => p.x++);
+                break;
+            }
+            case Dir.Up: {
+                didMove = tryMove(p => p.y--);
+                break;
+            }
+            case Dir.Down: {
+                didMove = tryMove(p => p.y++);
+                break;
+            }
         }
     }
     if (didMove) {
