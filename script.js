@@ -433,10 +433,36 @@ function smoothMoveCharacters() {
     }
 }
 
+function getRotationAngleFromDirection(dir) {
+    switch(dir) {
+        case Dir.Right:
+            return 0;
+        case Dir.Left:
+            return Math.PI;
+        case Dir.Up:
+            return -Math.PI/2;
+        case Dir.Down:
+            return Math.PI/2;
+    }
+    throw new Error(`unexpected direction: ${dir}`);
+    return 0;
+}
+
 // function for rendering character objects in CHARS
 function renderCharacters() {
     let [x, y] = getCoordinatesFromPosition(MATHMAN_DISPLAY_POS.x, MATHMAN_DISPLAY_POS.y, true);
+    ctx.save();
+    ctx.translate(x + (mathmanImage.width / 2), y + (mathmanImage.height / 2));
+    if (currentMathmanDir === Dir.Left) {
+        // just mirror it - rotating it makes it look upside-down
+        ctx.scale(-1, 1);
+    } else {
+        let angle = getRotationAngleFromDirection(currentMathmanDir);
+        ctx.rotate(angle);
+    }
+    ctx.translate(-(x + (mathmanImage.width / 2)), -(y + (mathmanImage.height / 2)));
     ctx.drawImage(mathmanImage, x, y, mathmanImage.width, mathmanImage.height);
+    ctx.restore();
 }
 
 // main function to be run for rendering frames
