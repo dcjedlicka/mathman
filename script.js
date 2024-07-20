@@ -47,7 +47,7 @@ let MATHMAN_DISPLAY_POS = {x: 0, y: 0};
 let currentQuestion = undefined;
 let currentMathmanMode = MathmanMode.Moving;
 // Set this to 1 to turn off smooth moves
-const MOVE_INCREMENT = 1;
+const MOVE_INCREMENT = 0.07;
 let currentMathmanDir = Dir.Right;
 // Set if mathman is between spaces (with smooth moves)
 let currentMathmanMovingDir = undefined;
@@ -152,60 +152,90 @@ function keyToDirection(key) {
     return undefined;
 }
 
+function onMoveToNewSquare() {
+    let element = boardElements[MATHMAN_POS.y][MATHMAN_POS.x]; 
+    if (element === 1) {
+        boardElements[MATHMAN_POS.y][MATHMAN_POS.x] = 0;
+    }
+    else if (element !== 0) {
+        activateQuestionMode();
+    }
+    if (checkIfWon()) {
+        currentMathmanMode = MathmanMode.Won;
+    }
+}
+
 function handleMove(ev) {
     let didMove = false;
     let direction = keyToDirection(ev.key);
     if (direction) {
         switch (direction) {
             case Dir.Left: {
-                didMove = tryMove(p => p.x--);
-                if (didMove && MOVE_INCREMENT !== 1) {
-                    MATHMAN_POS.x += 1;
-                    MATHMAN_DISPLAY_POS.x -= MOVE_INCREMENT;
+                if (currentMathmanMovingDir === undefined || currentMathmanMovingDir === Dir.Right) {
+                    // If we're moving right already always allow backing up
+                    if (currentMathmanMovingDir === Dir.Right) {
+                        didMove = true;
+                    } else {
+                        didMove = tryMove(p => p.x--);
+                        if (didMove && MOVE_INCREMENT !== 1) {
+                            MATHMAN_POS.x += 1;
+                        }
+                    }
                 }
                 break;
             }
             case Dir.Right: {
-                didMove = tryMove(p => p.x++);
-                if (didMove && MOVE_INCREMENT !== 1) {
-                    MATHMAN_POS.x -= 1;
-                    MATHMAN_DISPLAY_POS.x += MOVE_INCREMENT;
+                if (currentMathmanMovingDir === undefined || currentMathmanMovingDir === Dir.Left) {
+                    // If we're moving left already always allow backing up
+                    if (currentMathmanMovingDir === Dir.Left) {
+                        didMove = true;
+                    } else {
+                        didMove = tryMove(p => p.x++);
+                        if (didMove && MOVE_INCREMENT !== 1) {
+                            MATHMAN_POS.x -= 1;
+                        }
+                    }
                 }
                 break;
             }
             case Dir.Up: {
-                didMove = tryMove(p => p.y--);
-                if (didMove && MOVE_INCREMENT !== 1) {
-                    MATHMAN_POS.y += 1;
-                    MATHMAN_DISPLAY_POS.y -= MOVE_INCREMENT;
+                if (currentMathmanMovingDir === undefined || currentMathmanMovingDir === Dir.Down) {
+                    // If we're moving down already always allow backing up
+                    if (currentMathmanMovingDir === Dir.Down) {
+                        didMove = true;
+                    } else {
+                        didMove = tryMove(p => p.y--);
+                        if (didMove && MOVE_INCREMENT !== 1) {
+                            MATHMAN_POS.y += 1;
+                        }
+                    }
                 }
                 break;
             }
             case Dir.Down: {
-                didMove = tryMove(p => p.y++);
-                if (didMove && MOVE_INCREMENT !== 1) {
-                    MATHMAN_POS.y -= 1;
-                    MATHMAN_DISPLAY_POS.y += MOVE_INCREMENT;
+                if (currentMathmanMovingDir === undefined || currentMathmanMovingDir === Dir.Up) {
+                    // If we're moving up already always allow backing up
+                    if (currentMathmanMovingDir === Dir.Up) {
+                        didMove = true;
+                    } else {
+                        didMove = tryMove(p => p.y++);
+                        if (didMove && MOVE_INCREMENT !== 1) {
+                            MATHMAN_POS.y -= 1;
+                        }
+                    }
                 }
                 break;
             }
         }
         if (didMove) {
             currentMathmanDir = direction;
-            currentMathmanMovingDir = direction;
+            if (MOVE_INCREMENT !== 1) {
+                currentMathmanMovingDir = direction;
+            }
         }
     }
     if (didMove) {
-        let element = boardElements[MATHMAN_POS.y][MATHMAN_POS.x]; 
-        if (element === 1) {
-            boardElements[MATHMAN_POS.y][MATHMAN_POS.x] = 0;
-        }
-        else if (element !== 0) {
-            activateQuestionMode();
-        }
-        if (checkIfWon()) {
-            currentMathmanMode = MathmanMode.Won;
-        }
+        onMoveToNewSquare();
     }
 }
 
@@ -350,9 +380,62 @@ class answer {
 function renderElements() {
 }
 
+function smoothMoveCharacters() {
+    const tolerance = MOVE_INCREMENT / 2;
+    function coerceToX() {
+        // boo floating point
+        let floor = MATHMAN_DISPLAY_POS.x - Math.floor(MATHMAN_DISPLAY_POS.x);
+        if (floor <= tolerance || (1 - floor) <= tolerance) {
+            // snap to square and stop moving
+            // ugh, avoid -0
+            MATHMAN_POS.x = Math.abs(Math.round(MATHMAN_DISPLAY_POS.x));
+            MATHMAN_DISPLAY_POS.x = MATHMAN_POS.x;
+            currentMathmanMovingDir = undefined;
+            onMoveToNewSquare();
+        }
+    }
+    function coerceToY() {
+        // boo floating point
+        let floor = MATHMAN_DISPLAY_POS.y - Math.floor(MATHMAN_DISPLAY_POS.y);
+        if (floor <= tolerance || (1 - floor) <= tolerance) {
+            // snap to square and stop moving
+            // ugh, avoid -0
+            MATHMAN_POS.y = Math.abs(Math.round(MATHMAN_DISPLAY_POS.y));
+            MATHMAN_DISPLAY_POS.y = MATHMAN_POS.y;
+            currentMathmanMovingDir = undefined;
+            onMoveToNewSquare();
+        }
+    }
+
+    if (MOVE_INCREMENT !== 1 && currentMathmanMovingDir !== undefined) {
+        switch (currentMathmanMovingDir) {
+            case Dir.Left: {
+                MATHMAN_DISPLAY_POS.x -= MOVE_INCREMENT;
+                coerceToX();
+                break;
+            }
+            case Dir.Right: {
+                MATHMAN_DISPLAY_POS.x += MOVE_INCREMENT;
+                coerceToX();
+                break;
+            }
+            case Dir.Up: {
+                MATHMAN_DISPLAY_POS.y -= MOVE_INCREMENT;
+                coerceToY();
+                break;
+            }
+            case Dir.Down: {
+                MATHMAN_DISPLAY_POS.y += MOVE_INCREMENT;
+                coerceToY();
+                break;
+            }
+        }
+    }
+}
+
 // function for rendering character objects in CHARS
 function renderCharacters() {
-    let [x, y] = getCoordinatesFromPosition(MATHMAN_POS.x, MATHMAN_POS.y, true);
+    let [x, y] = getCoordinatesFromPosition(MATHMAN_DISPLAY_POS.x, MATHMAN_DISPLAY_POS.y, true);
     ctx.drawImage(mathmanImage, x, y, mathmanImage.width, mathmanImage.height);
 }
 
@@ -364,6 +447,7 @@ function startFrames() {
     // render each type of entity in order, relative to layers
     renderBackground();
     renderElements();
+    smoothMoveCharacters();
     renderCharacters();
 
     // rerun function (call next frame)
