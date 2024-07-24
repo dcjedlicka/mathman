@@ -1,10 +1,3 @@
-/*
-Issues:
-clean up
-more questions
-*/
-
-
 /*var block = document.getElementById("block");
 function checkDead(){
     let characterTop = parseInt(window.getComputedStyle(character).getPropertyValue("top"));
@@ -15,9 +8,12 @@ function checkDead(){
 }
 
 setInterval(checkDead, 10);*/
-// get canvas 2D context object
 const canvas = document.querySelector("canvas");
 const ctx = canvas.getContext("2d");
+
+const questionData = [
+    ["Eat all numbers greater than 6", "9", "12", "55", "7", "5", "4", "1", "3"]
+];
 
 // object for storing globally accessable states
 const GLOBALS = {}
@@ -68,6 +64,36 @@ const Board = [
 
 boardElements = [];
 
+class answer {
+    constructor(text, correct) {
+        this.text = text;
+        this.correct = correct;
+    }
+}
+
+class answerPosition {
+    constructor(answer, xpos, ypos) {
+        this.answer = answer;
+        this.xpos = xpos;
+        this.ypos = ypos;
+    }
+}
+
+class question {
+    constructor(questionData) {
+        this.text = questionData[0];
+        this.answers = [];
+        this.answers.push(new answerPosition(new answer(questionData[1], true), 7, 1));
+        this.answers.push(new answerPosition(new answer(questionData[2], true), 4, 1));
+        this.answers.push(new answerPosition(new answer(questionData[3], true), 3, 2));
+        this.answers.push(new answerPosition(new answer(questionData[4], true), 0, 4));
+        this.answers.push(new answerPosition(new answer(questionData[5], false), 6, 4));
+        this.answers.push(new answerPosition(new answer(questionData[6], false), 1, 3));
+        this.answers.push(new answerPosition(new answer(questionData[7], false), 5, 5));
+        this.answers.push(new answerPosition(new answer(questionData[8], false), 2, 0));
+    }
+}
+
 function isValidPosition(pos) {
     return pos.x >= 0 && pos.x < Board[0].length && pos.y >= 0 && pos.y < Board.length;
 }
@@ -107,6 +133,12 @@ function tryMove(newPosFn) {
     return true;
 }
 
+function getQuestion() {
+    let chosenData = questionData[0];
+    let theQuestion = new question(chosenData);
+    return theQuestion;
+}
+
 // function for applying any initial settings
 function init() {
     boardElements = new Array(Board.length);
@@ -114,7 +146,7 @@ function init() {
        boardElements[i] = new Array(Board[0].length).fill(1);
     }
     boardElements[MATHMAN_POS.y][MATHMAN_POS.x] = 0;
-    currentQuestion = new question();
+    currentQuestion = getQuestion();
     for(let x of currentQuestion.answers) {
         boardElements[x.ypos][x.xpos] = x;
     }
@@ -309,7 +341,7 @@ function renderBackground() {
     drawBoard();
     ctx.font = "30px sans serif";
     ctx.textBaseline = "top";
-    ctx.fillText(currentQuestion.text, 30, 10);
+    ctx.fillText(currentQuestion.text, 20, 10);
     for (let y = 0; y < boardElements.length; y++) {
         for (let x = 0; x < boardElements[0].length; x++) {
             if (boardElements[y][x] === 1) {
@@ -346,35 +378,6 @@ function renderBackground() {
     }
 }
 
-class question {
-    constructor() {
-        this.text = "Eat all numbers greater than 6";
-        this.answers = [];
-        this.answers.push(new answerPosition(new answer("9", true), 7, 1));
-        this.answers.push(new answerPosition(new answer("12", true), 4, 1));
-        this.answers.push(new answerPosition(new answer("55", true), 3, 2));
-        this.answers.push(new answerPosition(new answer("7", true), 0, 4));
-        this.answers.push(new answerPosition(new answer("5", false), 6, 4));
-        this.answers.push(new answerPosition(new answer("4", false), 1, 3));
-        this.answers.push(new answerPosition(new answer("1", false), 5, 5));
-        this.answers.push(new answerPosition(new answer("3", false), 2, 0));
-    }
-}
-
-class answerPosition {
-    constructor(answer, xpos, ypos) {
-        this.answer = answer;
-        this.xpos = xpos;
-        this.ypos = ypos;
-    }
-}
-
-class answer {
-    constructor(text, correct) {
-        this.text = text;
-        this.correct = correct;
-    }
-}
 
 // function for rendering elements
 function renderElements() {
