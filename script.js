@@ -134,6 +134,7 @@ function tryMove(newPosFn) {
 }
 
 function getQuestion() {
+    // TODO make this be random, not always 0
     let chosenData = questionData[0];
     let theQuestion = new question(chosenData);
     return theQuestion;
