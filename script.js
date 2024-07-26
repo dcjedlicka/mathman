@@ -12,7 +12,26 @@ const canvas = document.querySelector("canvas");
 const ctx = canvas.getContext("2d");
 
 const questionData = [
-    ["Eat all numbers greater than 6", "9", "12", "55", "7", "5", "4", "1", "3"]
+    ["Eat all numbers greater than 6", "9", "12", "55", "7", "5", "6", "1", "3"],
+    ["Eat all numbers greater than 0", "9", "12", "55", "1", "-5", "-42", "-1", "-13"],
+    ["Eat all numbers greater than 37", "49", "42", "55", "93", "5", "-40", "36", "29"],
+    ["Eat all numbers less than 8", "7", "1", "0", "-20", "20", "9", "8", "42"],
+    ["Eat all numbers less than 27", "0", "1", "19", "26", "99", "31", "28", "42"],
+    ["Eat all sums that add to 15", "7+8", "12+3", "11+4", "10+5", "10+4", "8+8", "2+3", "13+3"],
+    ["Eat all sums that add to 12", "11+1", "3+9", "6+6", "8+4", "8+3", "5+10", "1+2", "6+7"],
+    ["Eat all sums that add to 10", "5+5", "8+2", "10+0", "3+7", "5+4", "4+7", "8+1", "8+3"],
+    ["Eat all differences equal to 7", "9-2", "10-3", "11-4", "17-10", "10-2", "9-3", "8-2", "7-1"],
+    ["Eat all differences equal to 4", "9-5", "6-2", "7-3", "14-10", "5-2", "6-3", "9-7", "8-5"],
+    ["Eat all differences equal to 3", "9-6", "7-4", "5-2", "13-10", "5-1", "4-2", "11-6", "3-3"],
+    ["Eat all even numbers", "4", "12", "8", "20", "5", "9", "1", "13"],
+    ["Eat all odd numbers", "13", "1", "5", "9", "20", "8", "12", "4"],
+    ["Eat all multiples of 2", "4", "6", "10", "20", "5", "9", "11", "15"],
+    ["Eat all multiples of 3", "6", "9", "15", "18", "5", "8", "13", "10"],
+    ["Eat all multiples of 5", "10", "15", "25", "30", "4", "9", "11", "17"],
+    ["Eat all multiples of 10", "10", "20", "50", "100", "5", "19", "11", "33"],
+    ["Eat all factors of 6", "1", "2", "3", "6", "5", "4", "11", "9"],
+    ["Eat all factors of 12", "2", "3", "4", "6", "5", "7", "9", "11"],
+    ["Eat all factors of 15", "1", "3", "5", "15", "2", "4", "6", "9"],
 ];
 
 // object for storing globally accessable states
@@ -134,8 +153,8 @@ function tryMove(newPosFn) {
 }
 
 function getQuestion() {
-    // TODO make this be random, not always 0
-    let chosenData = questionData[0];
+    let index = Math.floor(Math.random() * questionData.length);
+    let chosenData = questionData[index];
     let theQuestion = new question(chosenData);
     return theQuestion;
 }
@@ -340,7 +359,7 @@ function drawBoard() {
 function renderBackground() {
     // place sprite onto background wherever you please..
     drawBoard();
-    ctx.font = "30px sans serif";
+    ctx.font = "26px sans serif";
     ctx.textBaseline = "top";
     ctx.fillText(currentQuestion.text, 20, 10);
     for (let y = 0; y < boardElements.length; y++) {
@@ -353,7 +372,7 @@ function renderBackground() {
             else if (boardElements[y][x].answer !== undefined) {
                 let spot = getCoordinatesFromPosition(x, y, true);
                 ctx.fillStyle = "green";
-                ctx.fillText(boardElements[y][x].answer.text, spot[0], spot[1]);
+                ctx.fillText(boardElements[y][x].answer.text, spot[0]-2, spot[1]);
             }
         }
     }
@@ -364,14 +383,17 @@ function renderBackground() {
         case MathmanMode.Question:
             // Draw current question
             let questionToDisplay = boardElements[MATHMAN_POS.y][MATHMAN_POS.x];
+            ctx.font = "26px sans serif";
             ctx.fillText("Eat " + questionToDisplay.answer.text + "?   Y or N ?", 30, 350);
             break;
         case MathmanMode.Dead:
+            ctx.font = "26px sans serif";
             ctx.fillStyle = "black";
             ctx.fillText("Sorry, the glitch wins!", 30, 350);
             ctx.fillStyle = "green";
             break;
         case MathmanMode.Won:
+            ctx.font = "26px sans serif";
             ctx.fillStyle = "black";
             ctx.fillText("Mathman wins! Free game!", 30, 350);
             ctx.fillStyle = "green";
