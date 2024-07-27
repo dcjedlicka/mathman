@@ -106,14 +106,39 @@ class question {
     constructor(questionData) {
         this.text = questionData[0];
         this.answers = [];
-        this.answers.push(new answerPosition(new answer(questionData[1], true), 7, 1));
-        this.answers.push(new answerPosition(new answer(questionData[2], true), 4, 1));
-        this.answers.push(new answerPosition(new answer(questionData[3], true), 3, 2));
-        this.answers.push(new answerPosition(new answer(questionData[4], true), 0, 4));
-        this.answers.push(new answerPosition(new answer(questionData[5], false), 6, 4));
-        this.answers.push(new answerPosition(new answer(questionData[6], false), 1, 3));
-        this.answers.push(new answerPosition(new answer(questionData[7], false), 5, 5));
-        this.answers.push(new answerPosition(new answer(questionData[8], false), 2, 0));
+        // TODO add validation that there's an even number
+        let numberOfEachKind = (questionData.length - 1) / 2;
+        // shuffle
+        {
+            for (let i = 1; i < numberOfEachKind; i++)  {
+                let j = Math.floor(Math.random() * (numberOfEachKind - (i - 1))) + i;
+                let temp = questionData[j];
+                if (temp === undefined) {
+                    debugger;
+                }
+                questionData[j] = questionData[i];
+                questionData[i] = temp;
+            }
+            this.answers.push(new answerPosition(new answer(questionData[1], true), 7, 1));
+            this.answers.push(new answerPosition(new answer(questionData[2], true), 4, 1));
+            this.answers.push(new answerPosition(new answer(questionData[3], true), 3, 2));
+            this.answers.push(new answerPosition(new answer(questionData[4], true), 0, 4));
+        }
+        {
+            for (let i = numberOfEachKind + 1; i < (2 * numberOfEachKind + 1); i++)  {
+                let j = Math.floor(Math.random() * (numberOfEachKind - (i - (numberOfEachKind + 1)))) + i;
+                let temp = questionData[j];
+                if (temp === undefined) {
+                    debugger;
+                }
+                questionData[j] = questionData[i];
+                questionData[i] = temp;
+            }
+            this.answers.push(new answerPosition(new answer(questionData[numberOfEachKind + 1], false), 6, 4));
+            this.answers.push(new answerPosition(new answer(questionData[numberOfEachKind + 2], false), 1, 3));
+            this.answers.push(new answerPosition(new answer(questionData[numberOfEachKind + 3], false), 5, 5));
+            this.answers.push(new answerPosition(new answer(questionData[numberOfEachKind + 4], false), 2, 0));
+        }
     }
 }
 
