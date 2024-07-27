@@ -41,10 +41,11 @@ const GLOBALS = {}
 const CHARS = [];
 
 const MathmanMode = Object.freeze({
-    Moving: 1,
-    Question: 2,
-    Dead: 3,
-    Won: 4,
+    Moving: "Moving",
+    Question: "Question",
+    GlitchChasing: "GlitchChasing",
+    Dead: "Dead",
+    Won: "Won",
 });
 
 const Dir = Object.freeze({
@@ -57,8 +58,11 @@ const Dir = Object.freeze({
 
 let mathmanImage = new Image(30, 30);
 mathmanImage.src = "MathmanGlitchAvatar.png";
+let glitchImage = new Image(30, 30);
+glitchImage.src = "Glitch.png";
 let MATHMAN_POS = {x: 0, y: 0};
 let MATHMAN_DISPLAY_POS = {x: 0, y: 0};
+let GLITCH_DISPLAY_POS = {x: 0, y: 0};
 let currentQuestion = undefined;
 let currentMathmanMode = MathmanMode.Moving;
 // Set this to 1 to turn off smooth moves
@@ -178,6 +182,9 @@ function init() {
             case MathmanMode.Question:
                 handleQuestion(ev);
                 break;
+            case MathmanMode.GlitchChasing:
+                handleMove(ev);
+                break;
             case MathmanMode.Dead:
                 break;
             case MathmanMode.Won:
@@ -210,7 +217,11 @@ function onMoveToNewSquare() {
         boardElements[MATHMAN_POS.y][MATHMAN_POS.x] = 0;
     }
     else if (element !== 0) {
-        activateQuestionMode();
+        if (currentMathmanMode === MathmanMode.GlitchChasing) {
+            boardElements[MATHMAN_POS.y][MATHMAN_POS.x] = 0;
+        } else {
+            activateQuestionMode();
+        }
     }
     if (checkIfWon()) {
         currentMathmanMode = MathmanMode.Won;
@@ -317,13 +328,18 @@ function handleQuestion(ev) {
                 currentMathmanMode = MathmanMode.Won;
             }
         } else {
-            currentMathmanMode = MathmanMode.Dead;
-            // TODO go into glitch mode with chase and music
+            currentMathmanMode = MathmanMode.GlitchChasing;
+            // TODO music
+            GLITCH_DISPLAY_POS.x = (MATHMAN_POS.x > (Board[0].length / 2)) ? 0 : (Board[0].length - 1);
+            GLITCH_DISPLAY_POS.y = (MATHMAN_POS.y > (Board.length / 2)) ? 0 : (Board.length - 1);
         }
     }
 }
 
 function checkIfWon() {
+    if (currentMathmanMode === MathmanMode.GlitchChasing || currentMathmanMode === MathmanMode.Dead) {
+        return false;
+    }
     let won = !(boardElements.some(row => row.some(elem => elem !== 0)));
     return won;
 }
@@ -385,6 +401,12 @@ function renderBackground() {
             let questionToDisplay = boardElements[MATHMAN_POS.y][MATHMAN_POS.x];
             ctx.font = "26px sans serif";
             ctx.fillText("Eat " + questionToDisplay.answer.text + "?   Y or N ?", 30, 350);
+            break;
+        case MathmanMode.GlitchChasing:
+            ctx.font = "26px sans serif";
+            ctx.fillStyle = "black";
+            ctx.fillText("Run away, Mathman!", 30, 350);
+            ctx.fillStyle = "green";
             break;
         case MathmanMode.Dead:
             ctx.font = "26px sans serif";
@@ -457,6 +479,20 @@ function smoothMoveCharacters() {
             }
         }
     }
+    if (currentMathmanMode == MathmanMode.GlitchChasing) {
+        let moveRate = MOVE_INCREMENT === 1 ? 1 : MOVE_INCREMENT * 1.25;
+        let xDiff = MATHMAN_DISPLAY_POS.x - GLITCH_DISPLAY_POS.x;
+        let yDiff = MATHMAN_DISPLAY_POS.y - GLITCH_DISPLAY_POS.y;
+        if (Math.abs(xDiff) > Math.abs(yDiff)) {
+            GLITCH_DISPLAY_POS.x += (xDiff > 0) ? moveRate : -1 * moveRate;
+        } else {
+            GLITCH_DISPLAY_POS.y += (yDiff > 0) ? moveRate : -1 * moveRate;
+        }
+        if (Math.abs(MATHMAN_DISPLAY_POS.x - GLITCH_DISPLAY_POS.x) < 0.2 &&
+            Math.abs(MATHMAN_DISPLAY_POS.y - GLITCH_DISPLAY_POS.y) < 0.2) {
+            currentMathmanMode = MathmanMode.Dead;
+        }
+    }
 }
 
 function getRotationAngleFromDirection(dir) {
@@ -476,19 +512,25 @@ function getRotationAngleFromDirection(dir) {
 
 // function for rendering character objects in CHARS
 function renderCharacters() {
-    let [x, y] = getCoordinatesFromPosition(MATHMAN_DISPLAY_POS.x, MATHMAN_DISPLAY_POS.y, true);
-    ctx.save();
-    ctx.translate(x + (mathmanImage.width / 2), y + (mathmanImage.height / 2));
-    if (currentMathmanDir === Dir.Left) {
-        // just mirror it - rotating it makes it look upside-down
-        ctx.scale(-1, 1);
-    } else {
-        let angle = getRotationAngleFromDirection(currentMathmanDir);
-        ctx.rotate(angle);
+    if (currentMathmanMode !== MathmanMode.Dead) {
+        let [x, y] = getCoordinatesFromPosition(MATHMAN_DISPLAY_POS.x, MATHMAN_DISPLAY_POS.y, true);
+        ctx.save();
+        ctx.translate(x + (mathmanImage.width / 2), y + (mathmanImage.height / 2));
+        if (currentMathmanDir === Dir.Left) {
+            // just mirror it - rotating it makes it look upside-down
+            ctx.scale(-1, 1);
+        } else {
+            let angle = getRotationAngleFromDirection(currentMathmanDir);
+            ctx.rotate(angle);
+        }
+        ctx.translate(-(x + (mathmanImage.width / 2)), -(y + (mathmanImage.height / 2)));
+        ctx.drawImage(mathmanImage, x, y, mathmanImage.width, mathmanImage.height);
+        ctx.restore();
     }
-    ctx.translate(-(x + (mathmanImage.width / 2)), -(y + (mathmanImage.height / 2)));
-    ctx.drawImage(mathmanImage, x, y, mathmanImage.width, mathmanImage.height);
-    ctx.restore();
+    if (currentMathmanMode === MathmanMode.GlitchChasing || currentMathmanMode === MathmanMode.Dead) {
+        let [x, y] = getCoordinatesFromPosition(GLITCH_DISPLAY_POS.x, GLITCH_DISPLAY_POS.y, true);
+        ctx.drawImage(glitchImage, x, y, glitchImage.width, glitchImage.height);
+    }
 }
 
 // main function to be run for rendering frames
