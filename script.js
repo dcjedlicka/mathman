@@ -182,6 +182,11 @@ function tryMove(newPosFn) {
 }
 
 function getQuestion() {
+    for (let i = 0; i < questionData.length; ++i) {
+        if (questionData[i].length <= 1 || (questionData[i].length % 2 !== 1)) {
+            throw new Error(`Invalid number of answers (${questionData[i].length - 1}) for question ${questionData[i][0]}`);
+        }
+    }
     let index = Math.floor(Math.random() * questionData.length);
     let chosenData = questionData[index];
     let theQuestion = new question(chosenData);
