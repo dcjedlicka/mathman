@@ -505,7 +505,7 @@ function smoothMoveCharacters() {
         }
     }
     if (currentMathmanMode == MathmanMode.GlitchChasing) {
-        let moveRate = MOVE_INCREMENT === 1 ? 1 : MOVE_INCREMENT * 1.25;
+        let moveRate = MOVE_INCREMENT === 1 ? 1 : MOVE_INCREMENT * 0.75;
         let xDiff = MATHMAN_DISPLAY_POS.x - GLITCH_DISPLAY_POS.x;
         let yDiff = MATHMAN_DISPLAY_POS.y - GLITCH_DISPLAY_POS.y;
         if (Math.abs(xDiff) > Math.abs(yDiff)) {
