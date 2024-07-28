@@ -182,6 +182,11 @@ function tryMove(newPosFn) {
 }
 
 function getQuestion() {
+    for (let i = 0; i < questionData.length; ++i) {
+        if (questionData[i].length <= 1 || (questionData[i].length % 2 !== 1)) {
+            throw new Error(`Invalid number of answers (${questionData[i].length - 1}) for question ${questionData[i][0]}`);
+        }
+    }
     let index = Math.floor(Math.random() * questionData.length);
     let chosenData = questionData[index];
     let theQuestion = new question(chosenData);
@@ -535,6 +540,10 @@ function getRotationAngleFromDirection(dir) {
     return 0;
 }
 
+function isSoundActive() {
+    return document.getElementById("sound").checked === true;
+}
+
 // function for rendering character objects in CHARS
 function renderCharacters() {
     if (currentMathmanMode !== MathmanMode.Dead) {
@@ -573,5 +582,18 @@ function startFrames() {
     window.requestAnimationFrame(startFrames);
 }
 
-init(); // initialize game settings
-startFrames(); // start running frames
+addEventListener("DOMContentLoaded", e => {
+    document.getElementById("sound").addEventListener("input", e => {
+        if (!isSoundActive()) {
+            window.speechSynthesis.cancel();
+        }
+    });
+
+    init(); // initialize game settings
+    if (isSoundActive()) {
+        let utterance = new SpeechSynthesisUtterance("Math man, your mission is to " + currentQuestion.text);
+        utterance.rate = 1.3;
+        window.speechSynthesis.speak(utterance);
+    }
+    startFrames(); // start running frames
+});
