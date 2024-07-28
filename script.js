@@ -535,6 +535,10 @@ function getRotationAngleFromDirection(dir) {
     return 0;
 }
 
+function isSoundActive() {
+    return document.getElementById("sound").checked === true;
+}
+
 // function for rendering character objects in CHARS
 function renderCharacters() {
     if (currentMathmanMode !== MathmanMode.Dead) {
@@ -573,5 +577,18 @@ function startFrames() {
     window.requestAnimationFrame(startFrames);
 }
 
-init(); // initialize game settings
-startFrames(); // start running frames
+addEventListener("DOMContentLoaded", e => {
+    document.getElementById("sound").addEventListener("input", e => {
+        if (!isSoundActive()) {
+            window.speechSynthesis.cancel();
+        }
+    });
+
+    init(); // initialize game settings
+    if (isSoundActive()) {
+        let utterance = new SpeechSynthesisUtterance("Math man, your mission is to " + currentQuestion.text);
+        utterance.rate = 1.3;
+        window.speechSynthesis.speak(utterance);
+    }
+    startFrames(); // start running frames
+});

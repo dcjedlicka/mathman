@@ -7,6 +7,16 @@ canvas {
     top: 10px;
     position: relative;
   }
+div.settings {
+    margin-top: 2em;
+}
+div.settingsItem {
+    display: grid;
+    place-items: center;
+}
+div.settingsInnerItem {
+    transform: scale(3);
+}
 #character{
     width: 20px;
     height: 50px;
