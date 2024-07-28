@@ -106,11 +106,12 @@ class question {
     constructor(questionData) {
         this.text = questionData[0];
         this.answers = [];
-        // TODO add validation that there's an even number
         let numberOfEachKind = (questionData.length - 1) / 2;
         // shuffle
         {
-            for (let i = 1; i < numberOfEachKind; i++)  {
+            // don't shuffle the first spot, since that's on the right edge and may not fit
+            // (so start at i=2 instead of i=1)
+            for (let i = 2; i < numberOfEachKind; i++)  {
                 let j = Math.floor(Math.random() * (numberOfEachKind - (i - 1))) + i;
                 let temp = questionData[j];
                 if (temp === undefined) {
