@@ -56,6 +56,7 @@ const Dir = Object.freeze({
 });
 
 
+let audioElement = undefined;
 let mathmanImage = new Image(30, 30);
 mathmanImage.src = "MathmanGlitchAvatar.png";
 let glitchImage = new Image(30, 30);
@@ -583,18 +584,26 @@ function startFrames() {
     window.requestAnimationFrame(startFrames);
 }
 
-addEventListener("DOMContentLoaded", e => {
+addEventListener("DOMContentLoaded", async e => {
     document.getElementById("sound").addEventListener("input", e => {
         if (!isSoundActive()) {
             window.speechSynthesis.cancel();
+            if (audioElement) {
+                audioElement.pause();
+            }
         }
     });
 
     init(); // initialize game settings
     if (isSoundActive()) {
-        let utterance = new SpeechSynthesisUtterance("Math man, your mission is to " + currentQuestion.text);
-        utterance.rate = 1.3;
-        window.speechSynthesis.speak(utterance);
+        // TODO - make user click a button to start the game to get around autoplay limitations?
+        audioElement = new Audio("startupSound.mp3");
+        audioElement.addEventListener("ended", e => {
+            let utterance = new SpeechSynthesisUtterance("Math man, your mission is to " + currentQuestion.text);
+            utterance.rate = 1.3;
+            window.speechSynthesis.speak(utterance);
+        });
+        await audioElement.play();
     }
     startFrames(); // start running frames
 });
