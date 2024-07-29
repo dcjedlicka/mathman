@@ -41,6 +41,7 @@ const GLOBALS = {}
 const CHARS = [];
 
 const MathmanMode = Object.freeze({
+    Startup: "Startup",
     Moving: "Moving",
     Question: "Question",
     GlitchChasing: "GlitchChasing",
@@ -65,7 +66,9 @@ let MATHMAN_POS = {x: 0, y: 0};
 let MATHMAN_DISPLAY_POS = {x: 0, y: 0};
 let GLITCH_DISPLAY_POS = {x: 0, y: 0};
 let currentQuestion = undefined;
-let currentMathmanMode = MathmanMode.Moving;
+let currentMathmanMode = MathmanMode.Startup;
+let startupMaskYValue = 0;
+const STARTUP_MASK_SPEED = 8;
 // Set this to 1 to turn off smooth moves
 const MOVE_INCREMENT = 0.07;
 let currentMathmanDir = Dir.Right;
@@ -569,6 +572,16 @@ function renderCharacters() {
     }
 }
 
+
+function maskCanvas() {
+    if (startupMaskYValue >= canvas.height) {
+        currentMathmanMode = MathmanMode.Moving;
+        return;
+    }
+    ctx.clearRect(0, startupMaskYValue, canvas.width, canvas.height - startupMaskYValue);
+    startupMaskYValue += STARTUP_MASK_SPEED;
+}
+
 // main function to be run for rendering frames
 function startFrames() {
     // erase entire canvas
@@ -579,6 +592,9 @@ function startFrames() {
     renderElements();
     smoothMoveCharacters();
     renderCharacters();
+    if (currentMathmanMode === MathmanMode.Startup) {
+        maskCanvas();
+    }
 
     // rerun function (call next frame)
     window.requestAnimationFrame(startFrames);
