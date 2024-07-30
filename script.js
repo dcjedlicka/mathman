@@ -44,6 +44,7 @@ const MathmanMode = Object.freeze({
     Startup: "Startup",
     Moving: "Moving",
     Question: "Question",
+    WaitingForWrongAnswerAudio: "WaitingForWrongAnswerAudio",
     GlitchChasing: "GlitchChasing",
     Dead: "Dead",
     Won: "Won",
@@ -56,12 +57,27 @@ const Dir = Object.freeze({
     Right: 0x8
 });
 
+// preload audio elements, maybe this helps with latency?
+let AudioElements = new Map();
+for (let name of ["answerRight", "answerWrong", "atQuestion", "glitchChasing", "mathmanEaten", "startupSound"]) {
+    AudioElements.set(name, new Audio(`assets/sound/${name}.mp3`));
+}
 
-let audioElement = undefined;
+function pauseAudio() {
+    AudioElements.forEach((val) => val.pause());
+}
+
+function playAudio(name) {
+    pauseAudio();
+    if (isSoundActive()) {
+        AudioElements.get(name).play();
+    }
+}
+
 let mathmanImage = new Image(30, 30);
-mathmanImage.src = "MathmanGlitchAvatar.png";
+mathmanImage.src = "assets/images/MathmanGlitchAvatar.png";
 let glitchImage = new Image(30, 30);
-glitchImage.src = "Glitch.png";
+glitchImage.src = "assets/images/Glitch.png";
 let MATHMAN_POS = {x: 0, y: 0};
 let MATHMAN_DISPLAY_POS = {x: 0, y: 0};
 let GLITCH_DISPLAY_POS = {x: 0, y: 0};
@@ -218,6 +234,7 @@ function init() {
                 handleQuestion(ev);
                 break;
             case MathmanMode.GlitchChasing:
+            case MathmanMode.WaitingForWrongAnswerAudio:
                 handleMove(ev);
                 break;
             case MathmanMode.Dead:
@@ -252,7 +269,7 @@ function onMoveToNewSquare() {
         boardElements[MATHMAN_POS.y][MATHMAN_POS.x] = 0;
     }
     else if (element !== 0) {
-        if (currentMathmanMode === MathmanMode.GlitchChasing) {
+        if (currentMathmanMode === MathmanMode.GlitchChasing || currentMathmanMode === MathmanMode.WaitingForWrongAnswerAudio) {
             boardElements[MATHMAN_POS.y][MATHMAN_POS.x] = 0;
         } else {
             activateQuestionMode();
@@ -339,6 +356,7 @@ function handleMove(ev) {
 
 function activateQuestionMode() {
     currentMathmanMode = MathmanMode.Question;
+    playAudio("atQuestion");
 }
 
 function handleQuestion(ev) {
@@ -356,15 +374,25 @@ function handleQuestion(ev) {
     if (answer !== undefined) {
         const question = boardElements[MATHMAN_POS.y][MATHMAN_POS.x];
         if (question.answer.correct === answer) {
-            // TODO play a happy sound
+            playAudio("answerRight");
             currentMathmanMode = MathmanMode.Moving;
             boardElements[MATHMAN_POS.y][MATHMAN_POS.x] = 0;
             if (checkIfWon()) {
                 currentMathmanMode = MathmanMode.Won;
             }
         } else {
-            currentMathmanMode = MathmanMode.GlitchChasing;
-            // TODO music
+            if (isSoundActive()) {
+                playAudio("answerWrong");
+                // delay mode change until sound over
+                currentMathmanMode = MathmanMode.WaitingForWrongAnswerAudio;
+                AudioElements.get("answerWrong").addEventListener("ended", e => {
+                    AudioElements.get("glitchChasing").loop = true;
+                    playAudio("glitchChasing");
+                    currentMathmanMode = MathmanMode.GlitchChasing;
+                });
+            } else {
+                currentMathmanMode = MathmanMode.GlitchChasing;
+            }
             GLITCH_DISPLAY_POS.x = (MATHMAN_POS.x > (Board[0].length / 2)) ? 0 : (Board[0].length - 1);
             GLITCH_DISPLAY_POS.y = (MATHMAN_POS.y > (Board.length / 2)) ? 0 : (Board.length - 1);
         }
@@ -372,7 +400,9 @@ function handleQuestion(ev) {
 }
 
 function checkIfWon() {
-    if (currentMathmanMode === MathmanMode.GlitchChasing || currentMathmanMode === MathmanMode.Dead) {
+    if (currentMathmanMode === MathmanMode.WaitingForWrongAnswerAudio ||
+        currentMathmanMode === MathmanMode.GlitchChasing ||
+        currentMathmanMode === MathmanMode.Dead) {
         return false;
     }
     let won = !(boardElements.some(row => row.some(elem => elem !== 0)));
@@ -525,6 +555,10 @@ function smoothMoveCharacters() {
         }
         if (Math.abs(MATHMAN_DISPLAY_POS.x - GLITCH_DISPLAY_POS.x) < 0.2 &&
             Math.abs(MATHMAN_DISPLAY_POS.y - GLITCH_DISPLAY_POS.y) < 0.2) {
+            if (isSoundActive()) {
+                pauseAudio();
+                AudioElements.get("mathmanEaten").play();
+            }
             currentMathmanMode = MathmanMode.Dead;
         }
     }
@@ -604,22 +638,19 @@ addEventListener("DOMContentLoaded", async e => {
     document.getElementById("sound").addEventListener("input", e => {
         if (!isSoundActive()) {
             window.speechSynthesis.cancel();
-            if (audioElement) {
-                audioElement.pause();
-            }
+            pauseAudio();
         }
     });
 
     init(); // initialize game settings
     if (isSoundActive()) {
         // TODO - make user click a button to start the game to get around autoplay limitations?
-        audioElement = new Audio("startupSound.mp3");
-        audioElement.addEventListener("ended", e => {
+        AudioElements.get("startupSound").addEventListener("ended", e => {
             let utterance = new SpeechSynthesisUtterance("Math man, your mission is to " + currentQuestion.text);
             utterance.rate = 1.3;
             window.speechSynthesis.speak(utterance);
         });
-        await audioElement.play();
+        playAudio("startupSound");
     }
     startFrames(); // start running frames
 });
