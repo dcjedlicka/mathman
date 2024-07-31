@@ -128,6 +128,7 @@ class question {
         this.answers = [];
         let numberOfEachKind = (questionData.length - 1) / 2;
         // shuffle
+        let tempAnswers = [];
         {
             // don't shuffle the first spot, since that's on the right edge and may not fit
             // (so start at i=2 instead of i=1)
@@ -141,9 +142,9 @@ class question {
                 questionData[i] = temp;
             }
             this.answers.push(new answerPosition(new answer(questionData[1], true), 7, 1));
-            this.answers.push(new answerPosition(new answer(questionData[2], true), 4, 1));
-            this.answers.push(new answerPosition(new answer(questionData[3], true), 3, 2));
-            this.answers.push(new answerPosition(new answer(questionData[4], true), 0, 4));
+            tempAnswers.push(new answer(questionData[2], true));
+            tempAnswers.push(new answer(questionData[3], true));
+            tempAnswers.push(new answer(questionData[4], true));
         }
         {
             for (let i = numberOfEachKind + 1; i < (2 * numberOfEachKind + 1); i++)  {
@@ -155,11 +156,24 @@ class question {
                 questionData[j] = questionData[i];
                 questionData[i] = temp;
             }
-            this.answers.push(new answerPosition(new answer(questionData[numberOfEachKind + 1], false), 6, 4));
-            this.answers.push(new answerPosition(new answer(questionData[numberOfEachKind + 2], false), 1, 3));
-            this.answers.push(new answerPosition(new answer(questionData[numberOfEachKind + 3], false), 5, 5));
-            this.answers.push(new answerPosition(new answer(questionData[numberOfEachKind + 4], false), 2, 0));
+            tempAnswers.push(new answer(questionData[numberOfEachKind + 1], false));
+            tempAnswers.push(new answer(questionData[numberOfEachKind + 2], false));
+            tempAnswers.push(new answer(questionData[numberOfEachKind + 3], false));
+            tempAnswers.push(new answer(questionData[numberOfEachKind + 4], false));
         }
+        for (let i = 0; i < tempAnswers.length - 1; i++) {
+            let j = Math.floor(Math.random() * (tempAnswers.length - i)) + i;
+            let temp = tempAnswers[j];
+            tempAnswers[j] = tempAnswers[i];
+            tempAnswers[i] = temp;
+        }
+        this.answers.push(new answerPosition(tempAnswers[0], 4, 1));
+        this.answers.push(new answerPosition(tempAnswers[1], 3, 2));
+        this.answers.push(new answerPosition(tempAnswers[2], 0, 4));
+        this.answers.push(new answerPosition(tempAnswers[3], 6, 4));
+        this.answers.push(new answerPosition(tempAnswers[4], 1, 3));
+        this.answers.push(new answerPosition(tempAnswers[5], 5, 5));
+        this.answers.push(new answerPosition(tempAnswers[6], 2, 0));
     }
 }
 
