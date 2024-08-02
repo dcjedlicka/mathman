@@ -61,6 +61,8 @@ const Dir = Object.freeze({
 let AudioElements = new Map();
 for (let name of ["answerRight", "answerWrong", "atQuestion", "glitchChasing", "mathmanEaten", "startupSound"]) {
     AudioElements.set(name, new Audio(`assets/sound/${name}.mp3`));
+    AudioElements.get(name).preload = "auto";
+    AudioElements.get(name).load();
 }
 
 function pauseAudio() {
