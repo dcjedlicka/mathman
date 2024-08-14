@@ -83,6 +83,7 @@ glitchImage.src = "assets/images/Glitch.png";
 let MATHMAN_POS = {x: 0, y: 0};
 let MATHMAN_DISPLAY_POS = {x: 0, y: 0};
 let GLITCH_DISPLAY_POS = {x: 0, y: 0};
+let GLITCH_POS = {x: 0, y: 0};
 let currentQuestion = undefined;
 let currentMathmanMode = MathmanMode.Startup;
 let startupMaskYValue = 0;
@@ -92,7 +93,8 @@ const MOVE_INCREMENT = 0.07;
 let currentMathmanDir = Dir.Right;
 // Set if mathman is between spaces (with smooth moves)
 let currentMathmanMovingDir = undefined;
-const GLITCH_MOVES_THROUGH_WALLS = true;
+let currentGlitchMovingDir = undefined;
+const GLITCH_MOVES_THROUGH_WALLS = false;
 
 
 const wallWidth = 6;
@@ -296,6 +298,34 @@ function onMathmanMoveToNewSquare() {
         currentMathmanMode = MathmanMode.Won;
     }
 }
+function setNextGlitchDirection() {
+    const nextGlitchPos = findNextStep(MATHMAN_POS, GLITCH_POS);
+    currentGlitchMovingDir = undefined;
+    if (nextGlitchPos) {
+        if (nextGlitchPos.x == GLITCH_POS.x) {
+            if (nextGlitchPos.y === GLITCH_POS.y + 1) {
+                currentGlitchMovingDir = Dir.Down;
+            } else if (nextGlitchPos.y === GLITCH_POS.y - 1) {
+                currentGlitchMovingDir = Dir.Up;
+            }
+        } else if (nextGlitchPos.y === GLITCH_POS.y) {
+            if (nextGlitchPos.x === GLITCH_POS.x + 1) {
+                currentGlitchMovingDir = Dir.Right;
+            } else if (nextGlitchPos.x === GLITCH_POS.x - 1) {
+                currentGlitchMovingDir = Dir.Left;
+            }
+        }
+    }
+    if (currentGlitchMovingDir === undefined) {
+        // Weird case if the glitch is very close to mathman
+        const moveXDir = Math.abs(GLITCH_POS.x - MATHMAN_DISPLAY_POS.x) >= Math.abs(GLITCH_POS.y - MATHMAN_DISPLAY_POS.y);
+        if (moveXDir) {
+            currentGlitchMovingDir = (GLITCH_POS.x > MATHMAN_DISPLAY_POS.x) ? Dir.Left : Dir.Right;
+        } else {
+            currentGlitchMovingDir = (GLITCH_POS.y > MATHMAN_DISPLAY_POS.y) ? Dir.Up : Dir.Down;
+        }
+    }
+}
 
 function handleMove(ev) {
     let didMove = false;
@@ -412,6 +442,9 @@ function handleQuestion(ev) {
             }
             GLITCH_DISPLAY_POS.x = (MATHMAN_POS.x > (Board[0].length / 2)) ? 0 : (Board[0].length - 1);
             GLITCH_DISPLAY_POS.y = (MATHMAN_POS.y > (Board.length / 2)) ? 0 : (Board.length - 1);
+            GLITCH_POS.x = GLITCH_DISPLAY_POS.x;
+            GLITCH_POS.y = GLITCH_DISPLAY_POS.y;
+            setNextGlitchDirection();
         }
     }
 }
@@ -541,10 +574,13 @@ function smoothMoveCharacters() {
             // snap to square and stop moving
             // ugh, avoid -0
             setNewPos(Math.abs(Math.round(displayVal)));
-            currentMathmanMovingDir = undefined;
-            onMathmanMoveToNewSquare();
+            if (isMathman) {
+                currentMathmanMovingDir = undefined;
+                onMathmanMoveToNewSquare();
+            } else {
+                setNextGlitchDirection();
+            }
         }
-
     }
     if (MOVE_INCREMENT !== 1 && currentMathmanMovingDir !== undefined) {
         switch (currentMathmanMovingDir) {
@@ -580,20 +616,37 @@ function smoothMoveCharacters() {
             } else {
                 GLITCH_DISPLAY_POS.y += (yDiff > 0) ? moveRate : -1 * moveRate;
             }
-            if (Math.abs(MATHMAN_DISPLAY_POS.x - GLITCH_DISPLAY_POS.x) < 0.2 &&
-                Math.abs(MATHMAN_DISPLAY_POS.y - GLITCH_DISPLAY_POS.y) < 0.2) {
-                if (isSoundActive()) {
-                    pauseAudio();
-                    AudioElements.get("mathmanEaten").play();
-                }
-                currentMathmanMode = MathmanMode.Dead;
-            }
         } else {
-            // TODO - only do this when we snap to the square
-            let nextGlitchPos = findNextStep(MATHMAN_POS, GLITCH_POS);
-            // TODO - logic for moving GLITCH_DISPLAY_POS
-            // TODO - logic for catching mathman
-
+            switch (currentGlitchMovingDir) {
+                case Dir.Left: {
+                    GLITCH_DISPLAY_POS.x -= MOVE_INCREMENT;
+                    coerce(true, false);
+                    break;
+                }
+                case Dir.Right: {
+                    GLITCH_DISPLAY_POS.x += MOVE_INCREMENT;
+                    coerce(true, false);
+                    break;
+                }
+                case Dir.Up: {
+                    GLITCH_DISPLAY_POS.y -= MOVE_INCREMENT;
+                    coerce(false, false);
+                    break;
+                }
+                case Dir.Down: {
+                    GLITCH_DISPLAY_POS.y += MOVE_INCREMENT;
+                    coerce(false, false);
+                    break;
+                }
+            }
+        }
+        if (Math.abs(MATHMAN_DISPLAY_POS.x - GLITCH_DISPLAY_POS.x) < 0.2 &&
+            Math.abs(MATHMAN_DISPLAY_POS.y - GLITCH_DISPLAY_POS.y) < 0.2) {
+            if (isSoundActive()) {
+                pauseAudio();
+                AudioElements.get("mathmanEaten").play();
+            }
+            currentMathmanMode = MathmanMode.Dead;
         }
     }
 }
@@ -690,6 +743,7 @@ addEventListener("DOMContentLoaded", async e => {
 });
 
 
+// A* algorithm, implemented by Claude AI
 function findNextStep(target, source) {
     const rows = Board.length;
     const cols = Board[0].length;
@@ -706,7 +760,7 @@ function findNextStep(target, source) {
         { dir: Dir.Down, dx: 0, dy: 1 },
         { dir: Dir.Left, dx: -1, dy: 0 }
       ];
-  
+
       for (const { dir, dx, dy } of directions) {
         if (Board[node.y][node.x] & dir) {
           const newX = node.x + dx;
@@ -723,38 +777,39 @@ function findNextStep(target, source) {
     const cameFrom = {};
     const gScore = { [`${source.x},${source.y}`]: 0 };
     const fScore = { [`${source.x},${source.y}`]: heuristic(source, target) };
-  
+
     while (openSet.length > 0) {
-      const current = openSet.reduce((a, b) => 
+      const current = openSet.reduce((a, b) =>
         fScore[`${a.x},${a.y}`] < fScore[`${b.x},${b.y}`] ? a : b
       );
 
       if (current.x === target.x && current.y === target.y) {
         let path = [current];
         let node = current;
-        while (cameFrom[`${node.x},${node.y}`]) {
+        // Claude's implementation had a bug, had to add this second check
+        while (cameFrom[`${node.x},${node.y}`] && !(node.x === source.x && node.y === source.y)) {
           node = cameFrom[`${node.x},${node.y}`];
           path.unshift(node);
         }
         return path[1]; // Return the next step
       }
-  
+
       openSet.splice(openSet.indexOf(current), 1);
-  
+
       for (const neighbor of getNeighbors(current)) {
         const tentativeGScore = gScore[`${current.x},${current.y}`] + 1;
-  
+
         if (tentativeGScore < (gScore[`${neighbor.x},${neighbor.y}`] || Infinity)) {
           cameFrom[`${neighbor.x},${neighbor.y}`] = current;
           gScore[`${neighbor.x},${neighbor.y}`] = tentativeGScore;
           fScore[`${neighbor.x},${neighbor.y}`] = gScore[`${neighbor.x},${neighbor.y}`] + heuristic(neighbor, target);
-  
+
           if (!openSet.some(node => node.x === neighbor.x && node.y === neighbor.y)) {
             openSet.push(neighbor);
           }
         }
       }
     }
-  
+
     return null; // No path found
   }
