@@ -92,6 +92,7 @@ const MOVE_INCREMENT = 0.07;
 let currentMathmanDir = Dir.Right;
 // Set if mathman is between spaces (with smooth moves)
 let currentMathmanMovingDir = undefined;
+const GLITCH_MOVES_THROUGH_WALLS = true;
 
 
 const wallWidth = 6;
@@ -279,8 +280,8 @@ function keyToDirection(key) {
     return undefined;
 }
 
-function onMoveToNewSquare() {
-    let element = boardElements[MATHMAN_POS.y][MATHMAN_POS.x]; 
+function onMathmanMoveToNewSquare() {
+    let element = boardElements[MATHMAN_POS.y][MATHMAN_POS.x];
     if (element === 1) {
         boardElements[MATHMAN_POS.y][MATHMAN_POS.x] = 0;
     }
@@ -366,7 +367,7 @@ function handleMove(ev) {
         }
     }
     if (didMove) {
-        onMoveToNewSquare();
+        onMathmanMoveToNewSquare();
     }
 }
 
@@ -511,71 +512,88 @@ function renderElements() {
 
 function smoothMoveCharacters() {
     const tolerance = MOVE_INCREMENT / 2;
-    function coerceToX() {
+    function coerce(isX, isMathman) {
+        const displayVal = isMathman ?
+            (isX ? MATHMAN_DISPLAY_POS.x : MATHMAN_DISPLAY_POS.y)
+            : (isX ? GLITCH_DISPLAY_POS.x : GLITCH_DISPLAY_POS.y);
+        const setNewPos = (newPos) => {
+            if (isMathman) {
+                if (isX) {
+                    MATHMAN_POS.x = newPos;
+                    MATHMAN_DISPLAY_POS.x = newPos;
+                } else {
+                    MATHMAN_POS.y = newPos;
+                    MATHMAN_DISPLAY_POS.y = newPos;
+                }
+            } else {
+                if (isX) {
+                    GLITCH_POS.x = newPos;
+                    GLITCH_DISPLAY_POS.x = newPos;
+                } else {
+                    GLITCH_POS.y = newPos;
+                    GLITCH_DISPLAY_POS.y = newPos;
+                }
+            }
+        }
         // boo floating point
-        let floor = MATHMAN_DISPLAY_POS.x - Math.floor(MATHMAN_DISPLAY_POS.x);
+        let floor = displayVal - Math.floor(displayVal);
         if (floor <= tolerance || (1 - floor) <= tolerance) {
             // snap to square and stop moving
             // ugh, avoid -0
-            MATHMAN_POS.x = Math.abs(Math.round(MATHMAN_DISPLAY_POS.x));
-            MATHMAN_DISPLAY_POS.x = MATHMAN_POS.x;
+            setNewPos(Math.abs(Math.round(displayVal)));
             currentMathmanMovingDir = undefined;
-            onMoveToNewSquare();
+            onMathmanMoveToNewSquare();
         }
-    }
-    function coerceToY() {
-        // boo floating point
-        let floor = MATHMAN_DISPLAY_POS.y - Math.floor(MATHMAN_DISPLAY_POS.y);
-        if (floor <= tolerance || (1 - floor) <= tolerance) {
-            // snap to square and stop moving
-            // ugh, avoid -0
-            MATHMAN_POS.y = Math.abs(Math.round(MATHMAN_DISPLAY_POS.y));
-            MATHMAN_DISPLAY_POS.y = MATHMAN_POS.y;
-            currentMathmanMovingDir = undefined;
-            onMoveToNewSquare();
-        }
-    }
 
+    }
     if (MOVE_INCREMENT !== 1 && currentMathmanMovingDir !== undefined) {
         switch (currentMathmanMovingDir) {
             case Dir.Left: {
                 MATHMAN_DISPLAY_POS.x -= MOVE_INCREMENT;
-                coerceToX();
+                coerce(true, true);
                 break;
             }
             case Dir.Right: {
                 MATHMAN_DISPLAY_POS.x += MOVE_INCREMENT;
-                coerceToX();
+                coerce(true, true);
                 break;
             }
             case Dir.Up: {
                 MATHMAN_DISPLAY_POS.y -= MOVE_INCREMENT;
-                coerceToY();
+                coerce(false, true);
                 break;
             }
             case Dir.Down: {
                 MATHMAN_DISPLAY_POS.y += MOVE_INCREMENT;
-                coerceToY();
+                coerce(false, true);
                 break;
             }
         }
     }
     if (currentMathmanMode == MathmanMode.GlitchChasing) {
-        let moveRate = MOVE_INCREMENT === 1 ? 1 : MOVE_INCREMENT * 0.75;
-        let xDiff = MATHMAN_DISPLAY_POS.x - GLITCH_DISPLAY_POS.x;
-        let yDiff = MATHMAN_DISPLAY_POS.y - GLITCH_DISPLAY_POS.y;
-        if (Math.abs(xDiff) > Math.abs(yDiff)) {
-            GLITCH_DISPLAY_POS.x += (xDiff > 0) ? moveRate : -1 * moveRate;
-        } else {
-            GLITCH_DISPLAY_POS.y += (yDiff > 0) ? moveRate : -1 * moveRate;
-        }
-        if (Math.abs(MATHMAN_DISPLAY_POS.x - GLITCH_DISPLAY_POS.x) < 0.2 &&
-            Math.abs(MATHMAN_DISPLAY_POS.y - GLITCH_DISPLAY_POS.y) < 0.2) {
-            if (isSoundActive()) {
-                pauseAudio();
-                AudioElements.get("mathmanEaten").play();
+        if (GLITCH_MOVES_THROUGH_WALLS) {
+            let moveRate = MOVE_INCREMENT === 1 ? 1 : MOVE_INCREMENT * 0.75;
+            let xDiff = MATHMAN_DISPLAY_POS.x - GLITCH_DISPLAY_POS.x;
+            let yDiff = MATHMAN_DISPLAY_POS.y - GLITCH_DISPLAY_POS.y;
+            if (Math.abs(xDiff) > Math.abs(yDiff)) {
+                GLITCH_DISPLAY_POS.x += (xDiff > 0) ? moveRate : -1 * moveRate;
+            } else {
+                GLITCH_DISPLAY_POS.y += (yDiff > 0) ? moveRate : -1 * moveRate;
             }
-            currentMathmanMode = MathmanMode.Dead;
+            if (Math.abs(MATHMAN_DISPLAY_POS.x - GLITCH_DISPLAY_POS.x) < 0.2 &&
+                Math.abs(MATHMAN_DISPLAY_POS.y - GLITCH_DISPLAY_POS.y) < 0.2) {
+                if (isSoundActive()) {
+                    pauseAudio();
+                    AudioElements.get("mathmanEaten").play();
+                }
+                currentMathmanMode = MathmanMode.Dead;
+            }
+        } else {
+            // TODO - only do this when we snap to the square
+            let nextGlitchPos = findNextStep(MATHMAN_POS, GLITCH_POS);
+            // TODO - logic for moving GLITCH_DISPLAY_POS
+            // TODO - logic for catching mathman
+
         }
     }
 }
@@ -670,3 +688,73 @@ addEventListener("DOMContentLoaded", async e => {
     }
     startFrames(); // start running frames
 });
+
+
+function findNextStep(target, source) {
+    const rows = Board.length;
+    const cols = Board[0].length;
+
+    function heuristic(a, b) {
+      return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+    }
+
+    function getNeighbors(node) {
+      const neighbors = [];
+      const directions = [
+        { dir: Dir.Up, dx: 0, dy: -1 },
+        { dir: Dir.Right, dx: 1, dy: 0 },
+        { dir: Dir.Down, dx: 0, dy: 1 },
+        { dir: Dir.Left, dx: -1, dy: 0 }
+      ];
+  
+      for (const { dir, dx, dy } of directions) {
+        if (Board[node.y][node.x] & dir) {
+          const newX = node.x + dx;
+          const newY = node.y + dy;
+          if (newX >= 0 && newX < cols && newY >= 0 && newY < rows) {
+            neighbors.push({ x: newX, y: newY });
+          }
+        }
+      }
+      return neighbors;
+    }
+
+    const openSet = [source];
+    const cameFrom = {};
+    const gScore = { [`${source.x},${source.y}`]: 0 };
+    const fScore = { [`${source.x},${source.y}`]: heuristic(source, target) };
+  
+    while (openSet.length > 0) {
+      const current = openSet.reduce((a, b) => 
+        fScore[`${a.x},${a.y}`] < fScore[`${b.x},${b.y}`] ? a : b
+      );
+
+      if (current.x === target.x && current.y === target.y) {
+        let path = [current];
+        let node = current;
+        while (cameFrom[`${node.x},${node.y}`]) {
+          node = cameFrom[`${node.x},${node.y}`];
+          path.unshift(node);
+        }
+        return path[1]; // Return the next step
+      }
+  
+      openSet.splice(openSet.indexOf(current), 1);
+  
+      for (const neighbor of getNeighbors(current)) {
+        const tentativeGScore = gScore[`${current.x},${current.y}`] + 1;
+  
+        if (tentativeGScore < (gScore[`${neighbor.x},${neighbor.y}`] || Infinity)) {
+          cameFrom[`${neighbor.x},${neighbor.y}`] = current;
+          gScore[`${neighbor.x},${neighbor.y}`] = tentativeGScore;
+          fScore[`${neighbor.x},${neighbor.y}`] = gScore[`${neighbor.x},${neighbor.y}`] + heuristic(neighbor, target);
+  
+          if (!openSet.some(node => node.x === neighbor.x && node.y === neighbor.y)) {
+            openSet.push(neighbor);
+          }
+        }
+      }
+    }
+  
+    return null; // No path found
+  }
