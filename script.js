@@ -84,6 +84,7 @@ let MATHMAN_POS = {x: 0, y: 0};
 let MATHMAN_DISPLAY_POS = {x: 0, y: 0};
 let GLITCH_DISPLAY_POS = {x: 0, y: 0};
 let GLITCH_POS = {x: 0, y: 0};
+let directionKeysDown = new Set();
 let currentQuestion = undefined;
 let currentMathmanMode = MathmanMode.Startup;
 let startupMaskYValue = 0;
@@ -95,6 +96,7 @@ let currentMathmanDir = Dir.Right;
 let currentMathmanMovingDir = undefined;
 let currentGlitchMovingDir = undefined;
 const GLITCH_MOVES_THROUGH_WALLS = false;
+const MOVE_WHEN_KEY_HELD_DOWN = true;
 
 
 const wallWidth = 6;
@@ -245,21 +247,33 @@ function init() {
         boardElements[x.ypos][x.xpos] = x;
     }
     document.addEventListener("keydown", ev => {
+        const direction = keyToDirection(ev.key);
+        if (direction && !ev.repeat) {
+            console.log(`${(new Date()).toISOString()} directionKeysDown add ${direction} ${ev.repeat}`);
+            directionKeysDown.add(ev.key);
+        }
         switch (currentMathmanMode) {
             case MathmanMode.Moving:
-                handleMove(ev);
+                handleMove(ev.key);
                 break;
             case MathmanMode.Question:
                 handleQuestion(ev);
                 break;
             case MathmanMode.GlitchChasing:
             case MathmanMode.WaitingForWrongAnswerAudio:
-                handleMove(ev);
+                handleMove(ev.key);
                 break;
             case MathmanMode.Dead:
                 break;
             case MathmanMode.Won:
                 break;
+        }
+    });
+    document.addEventListener("keyup", ev => {
+        const direction = keyToDirection(ev.key);
+        if (direction) {
+            console.log(`${(new Date()).toISOString()} directionKeysDown delete ${direction} ${ev.repeat}`);
+            directionKeysDown.delete(ev.key);
         }
     });
 }
@@ -297,6 +311,15 @@ function onMathmanMoveToNewSquare() {
     if (checkIfWon()) {
         currentMathmanMode = MathmanMode.Won;
     }
+    // TODO - refactor this list and share with keydown handler
+    if (currentMathmanMode === MathmanMode.Moving || currentMathmanMode === MathmanMode.GlitchChasing ||
+        currentMathmanMode === MathmanMode.WaitingForWrongAnswerAudio) {
+        if (MOVE_WHEN_KEY_HELD_DOWN && directionKeysDown.size === 1) {
+            const directionKey = directionKeysDown.keys().next().value;
+            console.log(`key still down, calling handleMove ${currentMathmanMovingDir}`);
+            handleMove(directionKey);
+        }
+    }
 }
 function setNextGlitchDirection() {
     const nextGlitchPos = findNextStep(MATHMAN_POS, GLITCH_POS);
@@ -327,9 +350,9 @@ function setNextGlitchDirection() {
     }
 }
 
-function handleMove(ev) {
+function handleMove(evKey) {
     let didMove = false;
-    let direction = keyToDirection(ev.key);
+    let direction = keyToDirection(evKey);
     if (direction) {
         switch (direction) {
             case Dir.Left: {
