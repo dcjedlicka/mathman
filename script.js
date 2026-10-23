@@ -66,7 +66,7 @@ for (let name of ["answerRight", "answerWrong", "atQuestion", "glitchChasing", "
 }
 
 function pauseAudio() {
-    AudioElements.forEach((val) => val.pause());
+    AudioElements.forEach((elem) => { if (!elem.paused) { elem.pause(); } } );
 }
 
 function playAudio(name) {
