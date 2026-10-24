@@ -254,10 +254,15 @@ function init() {
     canvas.addEventListener("touchstart", ev => {
         initialX = ev.touches[0].clientX;
         initialY = ev.touches[0].clientY;
+        ev.preventDefault();
+    });
+    canvas.addEventListener("touchmove", ev => {
+        ev.preventDefault();
     });
     canvas.addEventListener("touchcancel", _ev => {
         initialX = undefined;
         initialY = undefined;
+        ev.preventDefault();
     });
     canvas.addEventListener("touchend", ev => {
         if (initialX === undefined || initialY === undefined) {
