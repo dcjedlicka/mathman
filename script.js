@@ -96,6 +96,9 @@ let currentMathmanDir = Dir.Right;
 // Set if mathman is between spaces (with smooth moves)
 let currentMathmanMovingDir = undefined;
 let currentGlitchMovingDir = undefined;
+// Touch swipe detection
+let initialX = undefined;
+let initialY = undefined;
 const GLITCH_MOVES_THROUGH_WALLS = false;
 const MOVE_WHEN_KEY_HELD_DOWN = true;
 
@@ -247,6 +250,66 @@ function init() {
     for(let x of currentQuestion.answers) {
         boardElements[x.ypos][x.xpos] = x;
     }
+    // modified from https://www.kirupa.com/html5/detecting_touch_swipe_gestures.htm
+    canvas.addEventListener("touchstart", ev => {
+        initialX = ev.touches[0].clientX;
+        initialY = ev.touches[0].clientY;
+    });
+    canvas.addEventListener("touchcancel", _ev => {
+        initialX = undefined;
+        initialY = undefined;
+    });
+    canvas.addEventListener("touchend", ev => {
+        if (initialX === undefined || initialY === undefined) {
+            return;
+        }
+        var currentX = ev.changedTouches[0].clientX;
+        var currentY = ev.changedTouches[0].clientY;
+        
+        var diffX = initialX - currentX;
+        var diffY = initialY - currentY;
+        
+        let direction = undefined;
+        if (Math.abs(diffX) > Math.abs(diffY)) {
+            // sliding horizontally
+            if (diffX > 0) {
+                direction = Dir.Left;
+            } else {
+                direction = Dir.Right;
+            }  
+        } else {
+            // sliding vertically
+            if (diffY > 0) {
+                direction = Dir.Up;
+            } else {
+                direction = Dir.Down;
+            }  
+        }
+        console.log(`swipe direction ${direction}`);
+        
+        initialX = null;
+        initialY = null;
+        
+        ev.preventDefault();
+        if (direction === undefined) {
+            return;
+        }
+        switch (currentMathmanMode) {
+            case MathmanMode.Moving:
+                handleMove(direction);
+                break;
+            case MathmanMode.Question:
+                break;
+            case MathmanMode.GlitchChasing:
+            case MathmanMode.WaitingForWrongAnswerAudio:
+                handleMove(direction);
+                break;
+            case MathmanMode.Dead:
+                break;
+            case MathmanMode.Won:
+                break;
+        }
+    });
     document.addEventListener("keydown", ev => {
         const direction = keyToDirection(ev.key);
         if (direction && !ev.repeat) {
@@ -255,14 +318,14 @@ function init() {
         }
         switch (currentMathmanMode) {
             case MathmanMode.Moving:
-                handleMove(ev.key);
+                handleMoveKey(ev.key);
                 break;
             case MathmanMode.Question:
                 handleQuestion(ev);
                 break;
             case MathmanMode.GlitchChasing:
             case MathmanMode.WaitingForWrongAnswerAudio:
-                handleMove(ev.key);
+                handleMoveKey(ev.key);
                 break;
             case MathmanMode.Dead:
                 break;
@@ -318,7 +381,7 @@ function onMathmanMoveToNewSquare() {
         if (MOVE_WHEN_KEY_HELD_DOWN && directionKeysDown.size === 1) {
             const directionKey = directionKeysDown.keys().next().value;
             console.log(`key still down, calling handleMove ${currentMathmanMovingDir}`);
-            handleMove(directionKey);
+            handleMoveKey(directionKey);
         }
     }
 }
@@ -350,77 +413,78 @@ function setNextGlitchDirection() {
         }
     }
 }
-
-function handleMove(evKey) {
-    let didMove = false;
+function handleMoveKey(evKey) {
     let direction = keyToDirection(evKey);
-    if (direction) {
-        switch (direction) {
-            case Dir.Left: {
-                if (currentMathmanMovingDir === undefined || currentMathmanMovingDir === Dir.Right) {
-                    // If we're moving right already always allow backing up
-                    if (currentMathmanMovingDir === Dir.Right) {
-                        didMove = true;
-                    } else {
-                        didMove = tryMove(p => p.x--);
-                        if (didMove && MOVE_INCREMENT !== 1) {
-                            MATHMAN_POS.x += 1;
-                        }
+    if (direction !== undefined) {
+        handleMove(direction);
+    }
+}
+
+function handleMove(direction) {
+    let didMove = false;
+    switch (direction) {
+        case Dir.Left: {
+            if (currentMathmanMovingDir === undefined || currentMathmanMovingDir === Dir.Right) {
+                // If we're moving right already always allow backing up
+                if (currentMathmanMovingDir === Dir.Right) {
+                    didMove = true;
+                } else {
+                    didMove = tryMove(p => p.x--);
+                    if (didMove && MOVE_INCREMENT !== 1) {
+                        MATHMAN_POS.x += 1;
                     }
                 }
-                break;
             }
-            case Dir.Right: {
-                if (currentMathmanMovingDir === undefined || currentMathmanMovingDir === Dir.Left) {
-                    // If we're moving left already always allow backing up
-                    if (currentMathmanMovingDir === Dir.Left) {
-                        didMove = true;
-                    } else {
-                        didMove = tryMove(p => p.x++);
-                        if (didMove && MOVE_INCREMENT !== 1) {
-                            MATHMAN_POS.x -= 1;
-                        }
-                    }
-                }
-                break;
-            }
-            case Dir.Up: {
-                if (currentMathmanMovingDir === undefined || currentMathmanMovingDir === Dir.Down) {
-                    // If we're moving down already always allow backing up
-                    if (currentMathmanMovingDir === Dir.Down) {
-                        didMove = true;
-                    } else {
-                        didMove = tryMove(p => p.y--);
-                        if (didMove && MOVE_INCREMENT !== 1) {
-                            MATHMAN_POS.y += 1;
-                        }
-                    }
-                }
-                break;
-            }
-            case Dir.Down: {
-                if (currentMathmanMovingDir === undefined || currentMathmanMovingDir === Dir.Up) {
-                    // If we're moving up already always allow backing up
-                    if (currentMathmanMovingDir === Dir.Up) {
-                        didMove = true;
-                    } else {
-                        didMove = tryMove(p => p.y++);
-                        if (didMove && MOVE_INCREMENT !== 1) {
-                            MATHMAN_POS.y -= 1;
-                        }
-                    }
-                }
-                break;
-            }
+            break;
         }
-        if (didMove) {
-            currentMathmanDir = direction;
-            if (MOVE_INCREMENT !== 1) {
-                currentMathmanMovingDir = direction;
+        case Dir.Right: {
+            if (currentMathmanMovingDir === undefined || currentMathmanMovingDir === Dir.Left) {
+                // If we're moving left already always allow backing up
+                if (currentMathmanMovingDir === Dir.Left) {
+                    didMove = true;
+                } else {
+                    didMove = tryMove(p => p.x++);
+                    if (didMove && MOVE_INCREMENT !== 1) {
+                        MATHMAN_POS.x -= 1;
+                    }
+                }
             }
+            break;
+        }
+        case Dir.Up: {
+            if (currentMathmanMovingDir === undefined || currentMathmanMovingDir === Dir.Down) {
+                // If we're moving down already always allow backing up
+                if (currentMathmanMovingDir === Dir.Down) {
+                    didMove = true;
+                } else {
+                    didMove = tryMove(p => p.y--);
+                    if (didMove && MOVE_INCREMENT !== 1) {
+                        MATHMAN_POS.y += 1;
+                    }
+                }
+            }
+            break;
+        }
+        case Dir.Down: {
+            if (currentMathmanMovingDir === undefined || currentMathmanMovingDir === Dir.Up) {
+                // If we're moving up already always allow backing up
+                if (currentMathmanMovingDir === Dir.Up) {
+                    didMove = true;
+                } else {
+                    didMove = tryMove(p => p.y++);
+                    if (didMove && MOVE_INCREMENT !== 1) {
+                        MATHMAN_POS.y -= 1;
+                    }
+                }
+            }
+            break;
         }
     }
     if (didMove) {
+        currentMathmanDir = direction;
+        if (MOVE_INCREMENT !== 1) {
+            currentMathmanMovingDir = direction;
+        }
         onMathmanMoveToNewSquare();
     }
 }
