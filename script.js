@@ -241,6 +241,10 @@ function getQuestion() {
 
 // function for applying any initial settings
 function init() {
+    const size = Math.min(400, window.innerHeight - 40, window.innerWidth - 40);
+    canvas.width = size;
+    canvas.height = size;
+
     boardElements = new Array(Board.length);
     for (let i = 0; i < Board.length; i++) {
        boardElements[i] = new Array(Board[0].length).fill(1);
