@@ -46,3 +46,11 @@ div.settingsInnerItem {
     0%{left: 500px} 
     100%{left: -20px}
 }
+
+/* changed via JS */
+.hideBeforeStartup {
+    display: none;
+}
+/* changed via JS */
+.hideAfterStartup {
+}

@@ -41,6 +41,7 @@ const GLOBALS = {}
 const CHARS = [];
 
 const MathmanMode = Object.freeze({
+    BeforeStart: "BeforeStart",
     Startup: "Startup",
     Moving: "Moving",
     Question: "Question",
@@ -86,7 +87,7 @@ let GLITCH_DISPLAY_POS = {x: 0, y: 0};
 let GLITCH_POS = {x: 0, y: 0};
 let directionKeysDown = new Set();
 let currentQuestion = undefined;
-let currentMathmanMode = MathmanMode.Startup;
+let currentMathmanMode = MathmanMode.BeforeStart;
 let startupMaskYValue = 0;
 const STARTUP_MASK_SPEED = 8;
 // Set this to 1 to turn off smooth moves
@@ -695,6 +696,9 @@ function isSoundActive() {
 
 // function for rendering character objects in CHARS
 function renderCharacters() {
+    if (currentMathmanMode === MathmanMode.BeforeStart) {
+        return;
+    }
     if (currentMathmanMode !== MathmanMode.Dead) {
         let [x, y] = getCoordinatesFromPosition(MATHMAN_DISPLAY_POS.x, MATHMAN_DISPLAY_POS.y, true);
         ctx.save();
@@ -744,17 +748,24 @@ function startFrames() {
     window.requestAnimationFrame(startFrames);
 }
 
-addEventListener("DOMContentLoaded", async e => {
-    document.getElementById("sound").addEventListener("input", e => {
-        if (!isSoundActive()) {
-            window.speechSynthesis.cancel();
-            pauseAudio();
+function setElementsVisibility() {
+    let beforeStart = currentMathmanMode == MathmanMode.BeforeStart;
+    for (let stylesheet of document.styleSheets) {
+        for (let rule of stylesheet.cssRules) {
+            if (rule.selectorText === ".hideBeforeStartup") {
+                rule.style.display = beforeStart ? "none" : "";
+            } else if (rule.selectorText === ".hideAfterStartup") {
+                rule.style.display = beforeStart ? "" : "none";
+            }
         }
-    });
+    }
+}
 
+function start(withSound) {
     init(); // initialize game settings
-    if (isSoundActive()) {
-        // TODO - make user click a button to start the game to get around autoplay limitations?
+    document.getElementById("sound").checked = withSound;
+
+    if (withSound) {
         AudioElements.get("startupSound").addEventListener("ended", e => {
             let utterance = new SpeechSynthesisUtterance("Math man, your mission is to " + currentQuestion.text);
             utterance.rate = 1.3;
@@ -762,7 +773,24 @@ addEventListener("DOMContentLoaded", async e => {
         });
         playAudio("startupSound");
     }
+    currentMathmanMode = MathmanMode.Startup;
+    setElementsVisibility();
     startFrames(); // start running frames
+}
+
+addEventListener("DOMContentLoaded", async e => {
+    document.getElementById("sound").addEventListener("input", e => {
+        if (!isSoundActive()) {
+            window.speechSynthesis.cancel();
+            pauseAudio();
+        }
+    });
+    document.getElementById("startWithSound").addEventListener("click", e => {
+        start(/* withSound */ true);
+    });
+    document.getElementById("startWithoutSound").addEventListener("click", e => {
+        start(/* withSound */ false);
+    });
 });
 
 

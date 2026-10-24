@@ -2,17 +2,25 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <link rel="canonical" href="https://gregstoll.com/mathman/">
+    <!--#include virtual="/bootstraphead.html"-->
     <title>Mathman</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <canvas width="400" height="400">
-    </canvas>
-    <div class="settings">
-        <div class="settingsItem">
-            <div class="settingsInnerItem"><label for="sound">Sound?</label> <input id="sound" type="checkbox"></div>
+    <!--#include virtual="/navbar.html"-->
+    <div class="container">
+        <canvas id="canvas" class="hideBeforeStartup" width="400" height="400">
+        </canvas>
+        <button type="button" id="startWithSound" class="hideAfterStartup">Start with sound</button>
+        <button type="button" id="startWithoutSound" class="hideAfterStartup">Start without sound</button>
+        <div class="settings">
+            <div class="settingsItem">
+                <div class="settingsInnerItem hideBeforeStartup"><label for="sound">Sound?</label> <input id="sound" type="checkbox"></div>
+            </div>
         </div>
+        <!--#include virtual="/endOfBody.html"-->
     </div>
-<script src="script.js"></script>
+    <script src="script.js"></script>
 </body>
 </html>
