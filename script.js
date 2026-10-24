@@ -241,9 +241,8 @@ function getQuestion() {
 
 // function for applying any initial settings
 function init() {
-    const size = Math.min(400, window.innerHeight - 40, window.innerWidth - 40);
-    canvas.width = size;
-    canvas.height = size;
+    canvas.width = 400;
+    canvas.height = 400;
 
     boardElements = new Array(Board.length);
     for (let i = 0; i < Board.length; i++) {
@@ -263,7 +262,7 @@ function init() {
     canvas.addEventListener("touchmove", ev => {
         ev.preventDefault();
     });
-    canvas.addEventListener("touchcancel", _ev => {
+    canvas.addEventListener("touchcancel", ev => {
         initialX = undefined;
         initialY = undefined;
         ev.preventDefault();

@@ -6,7 +6,13 @@ canvas {
     height: 600px;
     top: 10px;
     position: relative;
+}
+@media (max-width: 840px) {
+  canvas {
+    width: min(400px, 100%, calc(100svh - 40px));
+    height: auto;
   }
+}
 div.settings {
     margin-top: 2em;
 }
