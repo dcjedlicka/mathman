@@ -266,7 +266,7 @@ function init() {
     canvas.addEventListener("touchmove", ev => {
         ev.preventDefault();
     });
-    canvas.addEventListener("touchcancel", ev => {
+    document.addEventListener("touchcancel", ev => {
         initialX = undefined;
         initialY = undefined;
         ev.preventDefault();
@@ -311,6 +311,13 @@ function init() {
                 handleMove(direction);
                 break;
             case MathmanMode.Question:
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = canvas.width / rect.width;
+                const scaleY = canvas.height / rect.height;
+                const x = (ev.changedTouches[0].clientX - rect.left) * scaleX;
+                const y = (ev.changedTouches[0].clientY - rect.top) * scaleY;
+                //document.getElementById('debug').innerText += `c.w = ${canvas.width} r.w = ${rect.width} c.h = ${canvas.height} r.h = ${rect.height} scaleX = ${scaleX} scaleY=${scaleY} e.cX = ${ev.changedTouches[0].clientX} r.l = ${rect.left} x = ${x} e.cY = ${ev.changedTouches[0].clientY} r.t = ${rect.top} x = ${x} y = ${y}\n`;
+                handleQuestionTap(x, y);
                 break;
             case MathmanMode.GlitchChasing:
             case MathmanMode.WaitingForWrongAnswerAudio:
@@ -329,6 +336,7 @@ function init() {
         const x = (ev.clientX - rect.left) * scaleX;
         const y = (ev.clientY - rect.top) * scaleY;
         if (currentMathmanMode === MathmanMode.Question) {
+            //document.getElementById('debug').innerText += `c.w = ${canvas.width} r.w = ${rect.width} c.h = ${canvas.height} r.h = ${rect.height} scaleX = ${scaleX} scaleY=${scaleY} e.cX = ${ev.clientX} r.l = ${rect.left} x = ${x} e.cY = ${ev.clientY} r.t = ${rect.top} x = ${x} y = ${y}\n`;
             handleQuestionTap(x, y);
         }
     });
