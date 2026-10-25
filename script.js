@@ -106,6 +106,10 @@ const MOVE_WHEN_KEY_HELD_DOWN = true;
 const wallWidth = 6;
 const mmSize = 40;
 const spotSize = wallWidth+mmSize;
+const yesAnswerX = 140;
+const noAnswerX = 200;
+const answerY = 350;
+const answerSize = 30;
 
 const Board = [
  [ Dir.Down|Dir.Right, Dir.Left|Dir.Down|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Right, Dir.Left|Dir.Down|Dir.Right, Dir.Left|Dir.Down],
@@ -318,6 +322,16 @@ function init() {
                 break;
         }
     });
+    canvas.addEventListener("click", ev => {
+        const rect = canvas.getBoundingClientRect();
+        const scaleX = canvas.width / rect.width;
+        const scaleY = canvas.height / rect.height;
+        const x = (ev.clientX - rect.left) * scaleX;
+        const y = (ev.clientY - rect.top) * scaleY;
+        if (currentMathmanMode === MathmanMode.Question) {
+            handleQuestionTap(x, y);
+        }
+    });
     document.addEventListener("keydown", ev => {
         const direction = keyToDirection(ev.key);
         if (direction && !ev.repeat) {
@@ -329,7 +343,7 @@ function init() {
                 handleMoveKey(ev.key);
                 break;
             case MathmanMode.Question:
-                handleQuestion(ev);
+                handleQuestionKey(ev);
                 break;
             case MathmanMode.GlitchChasing:
             case MathmanMode.WaitingForWrongAnswerAudio:
@@ -502,7 +516,7 @@ function activateQuestionMode() {
     playAudio("atQuestion");
 }
 
-function handleQuestion(ev) {
+function handleQuestionKey(ev) {
     let answer = undefined;
     switch (ev.key.toLowerCase()) {
         case "y": {
@@ -515,33 +529,50 @@ function handleQuestion(ev) {
         }
     }
     if (answer !== undefined) {
-        const question = boardElements[MATHMAN_POS.y][MATHMAN_POS.x];
-        if (question.answer.correct === answer) {
-            playAudio("answerRight");
-            currentMathmanMode = MathmanMode.Moving;
-            boardElements[MATHMAN_POS.y][MATHMAN_POS.x] = 0;
-            if (checkIfWon()) {
-                currentMathmanMode = MathmanMode.Won;
-            }
-        } else {
-            if (isSoundActive()) {
-                playAudio("answerWrong");
-                // delay mode change until sound over
-                currentMathmanMode = MathmanMode.WaitingForWrongAnswerAudio;
-                AudioElements.get("answerWrong").addEventListener("ended", e => {
-                    AudioElements.get("glitchChasing").loop = true;
-                    playAudio("glitchChasing");
-                    currentMathmanMode = MathmanMode.GlitchChasing;
-                });
-            } else {
-                currentMathmanMode = MathmanMode.GlitchChasing;
-            }
-            GLITCH_DISPLAY_POS.x = (MATHMAN_POS.x > (Board[0].length / 2)) ? 0 : (Board[0].length - 1);
-            GLITCH_DISPLAY_POS.y = (MATHMAN_POS.y > (Board.length / 2)) ? 0 : (Board.length - 1);
-            GLITCH_POS.x = GLITCH_DISPLAY_POS.x;
-            GLITCH_POS.y = GLITCH_DISPLAY_POS.y;
-            setNextGlitchDirection();
+        handleQuestion(answer);
+    }
+}
+function handleQuestionTap(x, y) {
+    if (!(y >= answerY && y <= answerY + answerSize)) {
+        return;
+    }
+    if (x >= yesAnswerX && x <= yesAnswerX + answerSize) {
+        handleQuestion(true);
+        return;
+    }
+    if (x >= noAnswerX && x <= noAnswerX + answerSize) {
+        handleQuestion(false);
+        return;
+    }
+}
+
+function handleQuestion(answer) {
+    const question = boardElements[MATHMAN_POS.y][MATHMAN_POS.x];
+    if (question.answer.correct === answer) {
+        playAudio("answerRight");
+        currentMathmanMode = MathmanMode.Moving;
+        boardElements[MATHMAN_POS.y][MATHMAN_POS.x] = 0;
+        if (checkIfWon()) {
+            currentMathmanMode = MathmanMode.Won;
         }
+    } else {
+        if (isSoundActive()) {
+            playAudio("answerWrong");
+            // delay mode change until sound over
+            currentMathmanMode = MathmanMode.WaitingForWrongAnswerAudio;
+            AudioElements.get("answerWrong").addEventListener("ended", e => {
+                AudioElements.get("glitchChasing").loop = true;
+                playAudio("glitchChasing");
+                currentMathmanMode = MathmanMode.GlitchChasing;
+            });
+        } else {
+            currentMathmanMode = MathmanMode.GlitchChasing;
+        }
+        GLITCH_DISPLAY_POS.x = (MATHMAN_POS.x > (Board[0].length / 2)) ? 0 : (Board[0].length - 1);
+        GLITCH_DISPLAY_POS.y = (MATHMAN_POS.y > (Board.length / 2)) ? 0 : (Board.length - 1);
+        GLITCH_POS.x = GLITCH_DISPLAY_POS.x;
+        GLITCH_POS.y = GLITCH_DISPLAY_POS.y;
+        setNextGlitchDirection();
     }
 }
 
@@ -611,7 +642,17 @@ function renderBackground() {
             // Draw current question
             let questionToDisplay = boardElements[MATHMAN_POS.y][MATHMAN_POS.x];
             ctx.font = "26px sans serif";
-            ctx.fillText("Eat " + questionToDisplay.answer.text + "?   Y or N ?", 30, 350);
+            ctx.fillText("Eat " + questionToDisplay.answer.text + "?", 30, 350);
+            ctx.strokeStyle = "gray";
+            ctx.beginPath();
+            ctx.roundRect(yesAnswerX, answerY, answerSize, answerSize, 7);
+            ctx.stroke();
+            ctx.fillText("Y", yesAnswerX + 6, answerY);
+            ctx.beginPath();
+            ctx.roundRect(noAnswerX, answerY, answerSize, answerSize, 7);
+            ctx.stroke();
+            ctx.fillText("N", noAnswerX + 6, answerY);
+            ctx.fillStyle = "green";
             break;
         case MathmanMode.GlitchChasing:
             ctx.font = "26px sans serif";
