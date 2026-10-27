@@ -669,39 +669,29 @@ function renderBackground() {
             ctx.roundRect(noAnswerX, answerY, answerSize, answerSize, 7);
             ctx.stroke();
             ctx.fillText("N", noAnswerX + 6, answerY);
-            ctx.fillStyle = "green";
             break;
         case MathmanMode.RightAnswer:
             ctx.font = "26px sans serif";
             ctx.fillStyle = "black";
             let emojis = [0x1F389, 0x1F389, 0x1F389]; // party poppers
             ctx.fillText(String.fromCodePoint(...emojis), 30, 350);
-            ctx.fillStyle = "green";
             break;
         case MathmanMode.GlitchChasing:
             ctx.font = "26px sans serif";
             ctx.fillStyle = "black";
             ctx.fillText("Run away, Mathman!", 30, 350);
-            ctx.fillStyle = "green";
             break;
         case MathmanMode.Dead:
             ctx.font = "26px sans serif";
             ctx.fillStyle = "black";
             ctx.fillText("Sorry, the glitch wins!", 30, 350);
-            ctx.fillStyle = "green";
             break;
         case MathmanMode.Won:
             ctx.font = "26px sans serif";
             ctx.fillStyle = "black";
             ctx.fillText("Mathman wins! Free game!", 30, 350);
-            ctx.fillStyle = "green";
             break;
     }
-}
-
-
-// function for rendering elements
-function renderElements() {
 }
 
 function smoothMoveCharacters() {
@@ -874,7 +864,6 @@ function startFrames() {
 
     // render each type of entity in order, relative to layers
     renderBackground();
-    renderElements();
     smoothMoveCharacters();
     renderCharacters();
     if (currentMathmanMode === MathmanMode.Startup) {
