@@ -24,11 +24,17 @@ div.settingsItem {
 }
 @media (max-width: 840px) {
   div.settingsItem {
-    width: min(400px, 100%, calc(100svh - 40px));
+    width: calc(min(400px, 100%, calc(100svh - 40px)) / 2);
+    height: auto;
   }
 }
 div.settingsItem + div.settingsItem {
     margin-top: 2em;
+}
+@media (max-width: 840px) {
+  div.settingsItem + div.settingsItem {
+    margin-top: 3em;
+  }
 }
 div.settingsInnerItem {
     transform: scale(2);
