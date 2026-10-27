@@ -45,6 +45,7 @@ const MathmanMode = Object.freeze({
     Startup: "Startup",
     Moving: "Moving",
     Question: "Question",
+    RightAnswer: "RightAnswer",
     WaitingForWrongAnswerAudio: "WaitingForWrongAnswerAudio",
     GlitchChasing: "GlitchChasing",
     Dead: "Dead",
@@ -319,8 +320,9 @@ function init() {
                 //document.getElementById('debug').innerText += `c.w = ${canvas.width} r.w = ${rect.width} c.h = ${canvas.height} r.h = ${rect.height} scaleX = ${scaleX} scaleY=${scaleY} e.cX = ${ev.changedTouches[0].clientX} r.l = ${rect.left} x = ${x} e.cY = ${ev.changedTouches[0].clientY} r.t = ${rect.top} x = ${x} y = ${y}\n`;
                 handleQuestionTap(x, y);
                 break;
-            case MathmanMode.GlitchChasing:
+            case MathmanMode.RightAnswer:
             case MathmanMode.WaitingForWrongAnswerAudio:
+            case MathmanMode.GlitchChasing:
                 handleMove(direction);
                 break;
             case MathmanMode.Dead:
@@ -353,8 +355,9 @@ function init() {
             case MathmanMode.Question:
                 handleQuestionKey(ev);
                 break;
-            case MathmanMode.GlitchChasing:
+            case MathmanMode.RightAnswer:
             case MathmanMode.WaitingForWrongAnswerAudio:
+            case MathmanMode.GlitchChasing:
                 handleMoveKey(ev.key);
                 break;
             case MathmanMode.Dead:
@@ -558,10 +561,16 @@ function handleQuestion(answer) {
     const question = boardElements[MATHMAN_POS.y][MATHMAN_POS.x];
     if (question.answer.correct === answer) {
         playAudio("answerRight");
-        currentMathmanMode = MathmanMode.Moving;
         boardElements[MATHMAN_POS.y][MATHMAN_POS.x] = 0;
         if (checkIfWon()) {
             currentMathmanMode = MathmanMode.Won;
+        } else {
+            currentMathmanMode = MathmanMode.RightAnswer;
+            setTimeout(() => {
+                 if (currentMathmanMode === MathmanMode.RightAnswer) {
+                    currentMathmanMode = MathmanMode.Moving;
+                 }
+            }, 1000);
         }
     } else {
         if (isSoundActive()) {
@@ -660,6 +669,13 @@ function renderBackground() {
             ctx.roundRect(noAnswerX, answerY, answerSize, answerSize, 7);
             ctx.stroke();
             ctx.fillText("N", noAnswerX + 6, answerY);
+            ctx.fillStyle = "green";
+            break;
+        case MathmanMode.RightAnswer:
+            ctx.font = "26px sans serif";
+            ctx.fillStyle = "black";
+            let emojis = [0x1F389, 0x1F389, 0x1F389]; // party poppers
+            ctx.fillText(String.fromCodePoint(...emojis), 30, 350);
             ctx.fillStyle = "green";
             break;
         case MathmanMode.GlitchChasing:
