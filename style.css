@@ -20,8 +20,11 @@ div.settingsItem {
     display: grid;
     place-items: center;
 }
+div.settingsItem + div.settingsItem {
+    margin-top: 2em;
+}
 div.settingsInnerItem {
-    transform: scale(3);
+    transform: scale(2);
 }
 #character{
     width: 20px;
