@@ -19,6 +19,13 @@ div.settings {
 div.settingsItem {
     display: grid;
     place-items: center;
+    width: 800px;
+    margin: auto;
+}
+@media (max-width: 840px) {
+  div.settingsItem {
+    width: min(400px, 100%, calc(100svh - 40px));
+  }
 }
 div.settingsItem + div.settingsItem {
     margin-top: 2em;
